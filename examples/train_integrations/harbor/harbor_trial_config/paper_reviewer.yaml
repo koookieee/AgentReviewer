@@ -1,0 +1,92 @@
+# @package harbor_trial_config
+#
+# Harbor Configuration for Paper Reviewer Training
+#
+# Adapted from default.yaml for academic paper reviewing with Claude Code as harness.
+# Key differences from default.yaml:
+#   - agent.name: claude-code (not terminus-2)
+#   - verifier.disable: true (no automated test verifier; rewards computed in generator)
+#   - Longer timeouts and more turns for multi-phase literature search + review
+#   - Larger context budget for research papers
+#
+# SkyRL injects at runtime:
+#   - task.path (from the prompt)
+#   - agent.model_name (constructed from served_model_name)
+#   - agent.kwargs.api_base (from SkyRL's HTTP endpoint)
+#   - agent.kwargs.session_id (generated per-trial)
+
+# Harbor TrialConfig fields below
+# --------------------------------
+
+# Where to store trial logging outputs
+trials_dir: ~/trials_paper_reviewer
+
+# Trial timeout multiplier (applied to default timeouts)
+timeout_multiplier: 1.5
+
+# Agent configuration
+# See: harbor.models.trial.config.AgentConfig
+agent:
+  # Claude Code as the harness agent
+  name: claude-code
+
+  # 40 minutes per trial — literature search + full review takes time
+  override_timeout_sec: 2400
+
+  # Agent-specific settings passed to the agent constructor
+  kwargs:
+    # More turns for multi-phase review (read, search, assess, write)
+    max_turns: 64
+
+    # Suppress Harbor override warnings for max_turns
+    suppress_max_turns_warning: true
+
+    # Enable context summarization — papers are long and multi-turn search accumulates tokens
+    enable_summarize: true
+
+    # Store all messages in the trial output (required for SkyRL training)
+    store_all_messages: true
+
+    # Sampling temperature for the policy model
+    temperature: 1.0
+
+    # Model info for token budgeting
+    # NOTE: max_input_tokens should match generator.inference_engine.engine_init_kwargs.max_model_len
+    model_info:
+      max_input_tokens: 65536
+      max_output_tokens: 32768
+      # Set costs to 0 for local training
+      input_cost_per_token: 0.0
+      output_cost_per_token: 0.0
+
+    # Additional kwargs passed through to LiteLLM's acompletion() call.
+    llm_kwargs:
+      # 20 minute LLM request timeout — longer for complex review generation
+      timeout: 1200
+      # Disable OpenAI SDK retries from LiteLLM
+      max_retries: 0
+      # Sampling params
+      top_p: 1.0
+      top_k: -1
+      min_p: 0.0
+
+# Environment configuration
+# See: harbor.models.trial.config.EnvironmentConfig
+environment:
+  # Environment type
+  type: daytona
+
+  # More resources for paper processing and literature search
+  override_cpus: 2
+  override_memory_mb: 4096
+  override_storage_mb: 2048
+  suppress_override_warnings: true
+
+  # Environment-specific settings
+  kwargs:
+    auto_stop_interval_mins: 45
+
+# Verifier configuration
+# Disabled — rewards are computed by PaperReviewerGenerator from the review output
+verifier:
+  disable: true

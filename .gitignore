@@ -101,6 +101,14 @@ venv.bak/
 # MkDocs build output
 site/
 
+# AI tool configs
+.claude/
+.gemini/
+.cursor/
+.aider*
+.copilot/
+.continue/
+
 # IDEs and editors
 .idea/
 .vscode/
