@@ -1,0 +1,4911 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)https://info.arxiv.org/help/api/user-manual.html -->
+<html lang="en" class="js-focus-visible js" data-js-focus-visible=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+      
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://info.arxiv.org/help/api/user-manual.html">
+      
+      <link rel="icon" href="https://info.arxiv.org/assets/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.1, mkdocs-material-8.5.6">
+    
+    
+      
+        <title>arXiv API User's Manual - arXiv info</title>
+      
+    
+    
+      <link rel="stylesheet" href="./arXiv API User&#39;s Manual - arXiv info_files/main.20d9efc8.min.css">
+      
+        
+        <link rel="stylesheet" href="./arXiv API User&#39;s Manual - arXiv info_files/palette.cbb835fc.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+        <link rel="stylesheet" href="./arXiv API User&#39;s Manual - arXiv info_files/css">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="./arXiv API User&#39;s Manual - arXiv info_files/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> | arXiv e-print repository</title>
+<link rel="stylesheet" href="./arXiv API User&#39;s Manual - arXiv info_files/kkn2tyz.css">
+<script type="text/x-mathjax-config;executed=true">
+  MathJax.Hub.Config({
+    messageStyle: "none",
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true,
+      ignoreClass: '.*',
+      processClass: 'mathjax.*'
+    },
+    TeX: {
+        extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js"],
+        noErrors: {
+          inlineDelimiters: ["$","$"],
+          multiLine: false,
+          style: {
+            "font-size": "normal",
+            "border": ""
+          }
+        }
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script src="./arXiv API User&#39;s Manual - arXiv info_files/MathJax.js"></script><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style>
+
+  <style type="text/css"><br>        .pm-notif-loader {<br>            width: 16px;<br>            height: 16px;<br>            border: 1px solid #b31b1b;<br>            border-bottom-color: transparent;<br>            border-radius: 50%;<br>            display: inline-block;<br>            box-sizing: border-box;<br>            animation: rotation 1s linear infinite;<br>            }<br><br>        @keyframes rotation {<br>            0% {<br>                transform: rotate(0deg);<br>            }<br>            100% {<br>                transform: rotate(360deg);<br>            }<br>        } <br>    </style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent=""><div id="MathJax_Message" style="display: none;"></div>
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="https://info.arxiv.org/help/api/user-manual.html#arxiv-api-users-manual" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+<!-- contains Cornell logo and sponsor statement, and Google Analytic script -->
+<div class="attribution" role="complementary">
+  <img src="./arXiv API User&#39;s Manual - arXiv info_files/cornell-reduced-white.png" height="auto" width="200" title="Cornell logo" alt="Logo for Cornell University">
+  <p class="sponsors"><a href="https://arxiv.org/about/funding">We gratefully acknowledge support from the Simons Foundation, member institutions, and all contributors.</a></p>
+</div>
+<!-- Google tag (gtag.js) -->
+<script async="" src="./arXiv API User&#39;s Manual - arXiv info_files/js"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-B1RR0QKWGQ');
+</script>
+
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://arxiv.org/" title="arXiv info" class="md-header__button md-logo" aria-label="arXiv info" data-md-component="logo">
+      
+  <img src="./arXiv API User&#39;s Manual - arXiv info_files/arxiv-logo-one-color-white.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            arXiv info
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              arXiv API User's Manual
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_3">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z"></path></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"></path></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent="" aria-label="Switch to system preference" type="radio" name="__palette" id="__palette_3">
+          
+            <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_2" hidden="">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"></path></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"></path></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">Type to start searching</div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/arXiv/arxiv-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+  </div>
+  <div class="md-source__repository md-source__repository--active">
+    GitHub
+  <ul class="md-source__facts"><li class="md-source__fact md-source__fact--version">2.0</li><li class="md-source__fact md-source__fact--stars">204</li><li class="md-source__fact md-source__fact--forks">150</li></ul></div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" style="top: 59px;">
+                <div class="md-sidebar__scrollwrap" style="height: 762px;">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://arxiv.org/" title="arXiv info" class="md-nav__button md-logo" aria-label="arXiv info" data-md-component="logo">
+      
+  <img src="./arXiv API User&#39;s Manual - arXiv info_files/arxiv-logo-one-color-white.svg" alt="logo">
+
+    </a>
+    arXiv info
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/arXiv/arxiv-docs" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+  </div>
+  <div class="md-source__repository md-source__repository--active">
+    GitHub
+  <ul class="md-source__facts"><li class="md-source__fact md-source__fact--version">2.0</li><li class="md-source__fact md-source__fact--stars">204</li><li class="md-source__fact md-source__fact--forks">150</li></ul></div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list">
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/index.html" class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-hidden="true" aria-expanded="false">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="About" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/index.html" class="md-nav__link">
+        About arXiv
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/people/index.html" class="md-nav__link">
+        Who we are
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2_3" type="checkbox" id="__nav_2_3">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_2_3" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Governance
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Governance" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_3">
+          <span class="md-nav__icon md-icon"></span>
+          Governance
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/governance.html" class="md-nav__link">
+        arXiv Governance Model
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/arXiv_bylaws.html" class="md-nav__link">
+        Bylaws
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/people/arxiv_advisory_board.html" class="md-nav__link">
+        arXiv Advisory Board
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/people/science_advisory_council.html" class="md-nav__link">
+        Science Advisory Council
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/people/editorial_advisory_council.html" class="md-nav__link">
+        Editorial Advisory Council
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/people/institutions_advisory_council.html" class="md-nav__link">
+        Institutions Advisory Council
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/membership.html" class="md-nav__link">
+        Membership
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/funding.html" class="md-nav__link">
+        Funding
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/reports/index.html" class="md-nav__link">
+        Reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/about/accessibility.html" class="md-nav__link">
+        Accessibility
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://blog.arxiv.org/" class="md-nav__link">
+        arXiv Blog
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Help
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Help" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Help
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/index.html" class="md-nav__link">
+        arXiv Help Contents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_3_2" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Submit an Article
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Submit an Article" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          Submit an Article
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit/index.html" class="md-nav__link">
+        Submission Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit_tex.html" class="md-nav__link">
+        Submit TeX/LaTeX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit_pdf.html" class="md-nav__link">
+        Submit a PDF
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit_legacy_differences.html" class="md-nav__link">
+        Legacy Submission System
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2_5" type="checkbox" id="__nav_3_2_5">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_3_2_5" tabindex="0" aria-hidden="true" aria-expanded="false">
+          FAQ
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="FAQ" data-md-level="3">
+        <label class="md-nav__title" for="__nav_3_2_5">
+          <span class="md-nav__icon md-icon"></span>
+          FAQ
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/index.html" class="md-nav__link">
+        Frequently Asked Questions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/aaclass.html" class="md-nav__link">
+        LaTeX2e class for Astronomy &amp; Astrophysics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/amslatex2000.html" class="md-nav__link">
+        AMS LaTeX packages and AMS Journal styles
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/browsergunzip.html" class="md-nav__link">
+        Downloaded .gz Files that are not Gzipped
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/citelinks.html" class="md-nav__link">
+        Why do my citations appear in long form
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/doublesubscript.html" class="md-nav__link">
+        Examples of TeX Double Subscripts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/dvips.html" class="md-nav__link">
+        Papersize/Layout Problems: Margins are Different and/or Text is Truncated
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/feynmf.html" class="md-nav__link">
+        Using Feynmf on arXiv
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/font-info-tl2025.html" class="md-nav__link">
+        Truetype and Opentype fonts available at arXiv's TeX Live 2025
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/freefonts.html" class="md-nav__link">
+        Proprietary fonts and/or their free equivalents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/landscape.html" class="md-nav__link">
+        How to Prepare Pages for Landscape Printout
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/mistakes.html" class="md-nav__link">
+        Common Mistakes that cause Automated Processing to Fail
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/pd1enc.html" class="md-nav__link">
+        Why do my user defined symbols display incorrectly
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/pdfrotate.html" class="md-nav__link">
+        Why are some pages in the generated PDF file rotated?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/psbad.html" class="md-nav__link">
+        Why are there Problems with my PostScript File?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/psjunk.html" class="md-nav__link">
+        Why is my PostScript File so Large?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/pstricks.html" class="md-nav__link">
+        Using PSTricks on arXiv
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/references.html" class="md-nav__link">
+        References to and in arXiv Documents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/revtex.html" class="md-nav__link">
+        Status of REVTeX 4 and REVTeX 4.1 support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/srcfaq.html" class="md-nav__link">
+        Nota Bene (updated 30 Jun '97)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/statfaq.html" class="md-nav__link">
+        Frequently Asked Questions on Public Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/texlive.html" class="md-nav__link">
+        TeX Live at arXiv
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/texprobs.html" class="md-nav__link">
+        Why doesn't my processed TeX submission look the way I expected it?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/textures.html" class="md-nav__link">
+        Textures
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/today.html" class="md-nav__link">
+        Why Does My Paper Give the Wrong Date?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/whynostamp.html" class="md-nav__link">
+        Why doesn't my paper have the arXiv id stamped on the side of the page?
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit_status.html" class="md-nav__link">
+        Status Information
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/ancillary_files.html" class="md-nav__link">
+        Ancillary Files (data, code, images)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/availability.html" class="md-nav__link">
+        Availability of submissions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/cross.html" class="md-nav__link">
+        Category cross listing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/endorsement.html" class="md-nav__link">
+        Endorsement
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/jref.html" class="md-nav__link">
+        Adding Journal Reference and DOI
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/license/index.html" class="md-nav__link">
+        Licenses
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/overlap.html" class="md-nav__link">
+        Text Overlap
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/prep.html" class="md-nav__link">
+        Metadata for Required and Optional Fields
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/replace.html" class="md-nav__link">
+        Submit a new version of a work
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/sizes.html" class="md-nav__link">
+        Oversized Submissions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit_index.html" class="md-nav__link">
+        Submit a Paper List for Conference Proceedings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/tar.html" class="md-nav__link">
+        Creating tar and zip Files for Upload
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/tex.html" class="md-nav__link">
+        What is TeX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/third_party_submission.html" class="md-nav__link">
+        Proxy / Third Party Submission
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/translations.html" class="md-nav__link">
+        Translations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/versions.html" class="md-nav__link">
+        Version Availability
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/whytex.html" class="md-nav__link">
+        Why Submit TeX?
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/withdraw.html" class="md-nav__link">
+        Withdraw / Retract a Submission
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Find and Read Articles
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Find and Read Articles" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          Find and Read Articles
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/find/index.html" class="md-nav__link">
+        Finding Articles
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/find.html" class="md-nav__link">
+        Search for articles
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/view.html" class="md-nav__link">
+        Viewing submissions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/subscribe.html" class="md-nav__link">
+        Email subscriptions for new papers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/arxiv_identifier.html" class="md-nav__link">
+        arXiv Identifier
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/config_browser.html" class="md-nav__link">
+        Configuring your browser
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/rss.html" class="md-nav__link">
+        RSS Feeds
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/license/index.html" class="md-nav__link">
+        Licenses
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/license/reuse.html" class="md-nav__link">
+        Permissions and Reuse
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/mathjax.html" class="md-nav__link">
+        What is MathJax?
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_4" type="checkbox" id="__nav_3_4">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_3_4" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Accounts
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Accounts" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          Accounts
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/accounts/index.html" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/registerhelp.html" class="md-nav__link">
+        Directions for Author Registration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/author_identifiers.html" class="md-nav__link">
+        Author Identifiers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/orcid.html" class="md-nav__link">
+        ORCID identifiers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/authority.html" class="md-nav__link">
+        Authority Records
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/not-registered.html" class="md-nav__link">
+        Why isn't a Person "Registered as an Author?"
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_5" type="checkbox" id="__nav_3_5">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_3_5" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Bulk Access to Metadata and Full Text
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Bulk Access to Metadata and Full Text" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Bulk Access to Metadata and Full Text
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/bulk_data/index.html" class="md-nav__link">
+        Index
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/arxiv_identifier_for_services.html" class="md-nav__link">
+        arXiv Identifier for Interacting Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/bulk_data_s3.html" class="md-nav__link">
+        Full Text via S3
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/api/index.html" class="md-nav__link">
+        API for Metadata
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/rss.html" class="md-nav__link">
+        RSS Feeds
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/ir.html" class="md-nav__link">
+        Institutional Repository Interoperability
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/bib_feed.html" class="md-nav__link">
+        Automated DOI and journal reference updates from publishers
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_4" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Brand
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Brand" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Brand
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/index.html" class="md-nav__link">
+        Our Brand
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/brand-guidelines.html" class="md-nav__link">
+        Name and logo use
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/brand-pillars.html" class="md-nav__link">
+        Brand pillars
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/colors.html" class="md-nav__link">
+        Colors
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/fonts.html" class="md-nav__link">
+        Fonts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/images.html" class="md-nav__link">
+        Images
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/logos.html" class="md-nav__link">
+        Logos
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/quotes.html" class="md-nav__link">
+        Quotes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/swag.html" class="md-nav__link">
+        Swag
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/tagline.html" class="md-nav__link">
+        Tagline
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/typography.html" class="md-nav__link">
+        Typography
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/brand/voice.html" class="md-nav__link">
+        Voice
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_5" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Labs
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Labs" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Labs
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/labs/index.html" class="md-nav__link">
+        arXiv Labs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/labs/showcase.html" class="md-nav__link">
+        arXivLabs: Showcase
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+
+    <!-- Determine whether to render item as a section -->
+    
+
+    <!-- Render item with nested items -->
+    <li class="md-nav__item md-nav__item--nested">
+
+      <!-- Active checkbox expands items contained within nested section -->
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6">
+      
+
+      <!-- Determine all nested items that are index pages -->
+      
+      
+
+      <!-- Render toggle to expand nested items -->
+      
+        
+        
+        <label class="md-nav__link" for="__nav_6" tabindex="0" aria-hidden="true" aria-expanded="false">
+          Policies
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+
+      <!-- Render link to index page + toggle -->
+      
+
+      <!-- Render nested navigation -->
+      <nav class="md-nav" aria-label="Policies" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Policies
+        </label>
+        <ul class="md-nav__list">
+
+          <!-- Render nested item list -->
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/policies/index.html" class="md-nav__link">
+        arXiv Policies
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/policies/code_of_conduct.html" class="md-nav__link">
+        Code of conduct
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/policies/privacy_policy.html" class="md-nav__link">
+        Privacy policy
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/policies/identity_and_affiliation.html" class="md-nav__link">
+        Identity, affiliation, and registration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/policies/submission_agreement.html" class="md-nav__link">
+        Submission terms and agreement
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/authority.html" class="md-nav__link">
+        Paper ownership
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/submit/index.html" class="md-nav__link">
+        Submission Guidelines
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/availability.html" class="md-nav__link">
+        Submission schedule and cutoff time
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/moderation/index.html" class="md-nav__link">
+        Content Moderation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/license/index.html" class="md-nav__link">
+        License and copyright
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/withdraw.html" class="md-nav__link">
+        Withdrawals
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/cross.html" class="md-nav__link">
+        Cross listing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/translations.html" class="md-nav__link">
+        Translations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/multilang.html" class="md-nav__link">
+        Non-English submissions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/overlap.html" class="md-nav__link">
+        Text Overlap
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/faq/whytex.html" class="md-nav__link">
+        Requiring TeX when possible
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/third_party_submission.html" class="md-nav__link">
+        Third party submission
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+
+  <!-- Currently active page -->
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://arxiv.org/category_taxonomy" class="md-nav__link">
+        Categories
+      </a>
+    </li>
+  
+
+    
+      
+      
+      <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Wrap everything with a macro to reduce file roundtrips (see #2213) -->
+
+
+<!-- Render current and nested navigation items -->
+
+
+  <!-- Determine class according to state -->
+  
+  
+
+  <!-- Main navigation item with nested items -->
+  
+    <li class="md-nav__item">
+      <a href="https://info.arxiv.org/help/stats/index.html" class="md-nav__link">
+        arXiv Usage Stats
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" style="top: 59px;">
+                <div class="md-sidebar__scrollwrap" style="height: 762px;">
+                  <div class="md-sidebar__inner">
+                    <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine title -->
+
+
+
+<!-- Table of contents -->
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  <!-- Table of contents title and list -->
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc">
+      
+        <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#arxiv-api-users-manual" class="md-nav__link">
+    arXiv API User's Manual
+  </a>
+  
+    <nav class="md-nav" aria-label="arXiv API User&#39;s Manual">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#table-of-contents" class="md-nav__link">
+    Table of Contents
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#1-preface" class="md-nav__link">
+    1. Preface
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#2-api-quickstart" class="md-nav__link">
+    2. API QuickStart
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3-structure-of-the-api" class="md-nav__link">
+    3. Structure of the API
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Structure of the API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#31-calling-the-api" class="md-nav__link">
+    3.1. Calling the API
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1. Calling the API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#311-query-interface" class="md-nav__link">
+    3.1.1. Query Interface
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1.1. Query Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3111-search_query-and-id_list-logic" class="md-nav__link">
+    3.1.1.1. search_query and id_list logic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3112-start-and-max_results-paging" class="md-nav__link">
+    3.1.1.2. start and max_results paging
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3113-sort-order-for-return-results" class="md-nav__link">
+    3.1.1.3. sort order for return results
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#32-the-api-response" class="md-nav__link">
+    3.2. The API Response
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#33-outline-of-an-atom-feed" class="md-nav__link">
+    3.3. Outline of an Atom feed
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3. Outline of an Atom feed">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#331-feed-metadata" class="md-nav__link">
+    3.3.1. Feed Metadata
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3.1. Feed Metadata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3311-title-id-link-and-updated" class="md-nav__link">
+    3.3.1.1. &lt;title&gt;, &lt;id&gt;, &lt;link&gt; and &lt;updated&gt;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3312-opensearch-extension-elements" class="md-nav__link">
+    3.3.1.2. OpenSearch Extension Elements
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#332-entry-metadata" class="md-nav__link">
+    3.3.2. Entry Metadata
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3.2. Entry Metadata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3321-title-id-published-and-updated" class="md-nav__link">
+    3.3.2.1. &lt;title&gt;, &lt;id&gt;, &lt;published&gt;, and &lt;updated&gt;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3322-summary-author-and-category" class="md-nav__link">
+    3.3.2.2. &lt;summary&gt;, &lt;author&gt; and &lt;category&gt;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3323-links" class="md-nav__link">
+    3.3.2.3. &lt;link&gt;'s
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#3324-arxiv-extension-elements" class="md-nav__link">
+    3.3.2.4. &lt;arxiv&gt; extension elements
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#34-errors" class="md-nav__link">
+    3.4. Errors
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#4-examples" class="md-nav__link">
+    4. Examples
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#41-simple-examples" class="md-nav__link">
+    4.1. Simple Examples
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1. Simple Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#411-perl" class="md-nav__link">
+    4.1.1. Perl
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#412-python" class="md-nav__link">
+    4.1.2. Python
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#413-ruby" class="md-nav__link">
+    4.1.3. Ruby
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#414-php" class="md-nav__link">
+    4.1.4. PHP
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#42-detailed-parsing-examples" class="md-nav__link">
+    4.2. Detailed Parsing Examples
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#5-appendices" class="md-nav__link">
+    5. Appendices
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Appendices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#51-details-of-query-construction" class="md-nav__link">
+    5.1. Details of Query Construction
+  </a>
+  
+    <nav class="md-nav" aria-label="5.1. Details of Query Construction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#511-a-note-on-article-versions" class="md-nav__link">
+    5.1.1. A Note on Article Versions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#52-details-of-atom-results-returned" class="md-nav__link">
+    5.2. Details of Atom Results Returned
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="https://info.arxiv.org/help/api/user-manual.html#53-subject-classifications" class="md-nav__link">
+    5.3. Subject Classifications
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/arXiv/arxiv-docs/blob/develop/source/help/api/user-manual.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"></path></svg>
+  </a>
+
+
+<p><span style="float: right"><img alt="API logo" src="./arXiv API User&#39;s Manual - arXiv info_files/arXiv_api_xml.png"></span></p>
+<h1 id="arxiv-api-users-manual">arXiv API User's Manual</h1>
+<p>Please review the <a href="https://info.arxiv.org/help/api/tou.html">Terms of Use for arXiv APIs</a> before using the arXiv
+API.</p>
+<h3 id="table-of-contents">Table of Contents</h3>
+<p><a href="https://info.arxiv.org/help/api/user-manual.html#_preface">1. Preface</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#Quickstart">2. API QuickStart</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#Architecture">3. Structure of the API</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_calling_the_api">3.1. Calling the API</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_query_interface">3.1.1. Query Interface</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#search_query_and_id_list">3.1.1.1. search_query and id_list
+logic</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#paging">3.1.1.2. start and max_results paging</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#sort">3.1.1.3. sort order for return results</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#api_response">3.2. The API Response</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#atom_feed_outline">3.3. Outline of an Atom feed</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_feed_metadata">3.3.1. Feed Metadata</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_lt_title_gt_lt_id_gt_lt_link_gt_and_lt_updated_gt">3.3.1.1. &lt;title&gt;, &lt;id&gt;, &lt;link&gt; and
+&lt;updated&gt;</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_opensearch_extension_elements">3.3.1.2. OpenSearch Extension
+Elements</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_entry_metadata">3.3.2. Entry Metadata</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#title_id_published_updated">3.3.2.1. &lt;title&gt;, &lt;id&gt;, &lt;published&gt;, and
+&lt;updated&gt;</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_lt_summary_gt_lt_author_gt_and_lt_category_gt">3.3.2.1. &lt;summary&gt;, &lt;author&gt; and
+&lt;category&gt;</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#entry_links">3.3.2.3. &lt;link&gt;'s</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#extension_elements">3.3.2.4. &lt;arxiv&gt; extension elements</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#errors">3.4. Errors</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#Examples">4. Examples</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_simple_examples">4.1. Simple Examples</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#perl_simple_example">4.1.1. Perl</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#python_simple_example">4.1.2. Python</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#ruby_simple_example">4.1.3. Ruby</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#php_simple_example">4.1.4. PHP</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#detailed_examples">4.2. Detailed Parsing Examples</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#Appendices">5. Appendices</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#query_details">5.1. Details of Query Construction</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_a_note_on_article_versions">5.1.1. A Note on Article Versions</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#_details_of_atom_results_returned">5.2. Details of Atom Results
+Returned</a><br>
+<a href="https://info.arxiv.org/help/api/user-manual.html#subject_classifications">5.3. Subject Classifications</a>  </p>
+<p><span id="_preface"></span></p>
+<h2 id="1-preface">1. Preface</h2>
+<p>The arXiv API allows programmatic access to the hundreds of thousands of
+e-prints hosted on <a href="http://arxiv.org/">arXiv.org</a>.</p>
+<p>This manual is meant to provide an introduction to using the API, as
+well as documentation describing its details, and as such is meant to be
+read by both beginning and advanced users. To get a flavor for how the
+API works, see the <a href="https://info.arxiv.org/help/api/user-manual.html#Quickstart">API Quickstart</a>. For more detailed
+information, see <a href="https://info.arxiv.org/help/api/user-manual.html#Architecture">Structure of the API</a>.</p>
+<p>For examples of using the API from several popular programming languages
+including perl, python and ruby, see the <a href="https://info.arxiv.org/help/api/user-manual.html#Examples">Examples</a> section.</p>
+<p>Finally, the <a href="https://info.arxiv.org/help/api/user-manual.html#Appendices">Appendices</a> contain an explanation of all
+input parameters to the API, as well as the output format.</p>
+<p><span id="Quickstart"></span></p>
+<h2 id="2-api-quickstart">2. API QuickStart</h2>
+<p>The easiest place to start with the API is by accessing it through a web
+browser. For examples of accessing the API through common programming
+languages, see the <a href="https://info.arxiv.org/help/api/user-manual.html#Examples">Examples</a> section.</p>
+<p>Most everyone that has read or submitted e-prints on the arXiv is
+familiar with the arXiv human web interface. These HTML pages can be
+accessed by opening up your web browser, and entering the following url
+in your web browser</p>
+<p><a href="http://arxiv.org/">http://arxiv.org</a></p>
+<p>From there, the article listings can be browsed by clicking on one of
+the many links, or you can search for articles using the search box in
+the upper right hand side of the page. For example, if I wanted to
+search for articles that contain the word <code>electron</code> in the title or
+abstract, I would type <code>electron</code> in the search box, and click <code>Go</code>. If
+you follow my example, you will see <a href="http://arxiv.org/find/all/1/all:+electron/0/1/0/all/0/1">something like
+this</a>: a web
+page listing the title and authors of each result, with links to the
+abstract page, pdf, etc.</p>
+<p>In its simplest form, the API can be used in exactly the same way.
+However, it uses a few shortcuts so there is less clicking involved. For
+example, you can see the same search results for <code>electron</code> by entering
+the url</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=all:electron">http://export.arxiv.org/api/query?search_query=all:electron</a>.</p>
+<p>Alternatively, you can search for articles that contain <code>electron</code> <em>AND</em>
+<code>proton</code> with the API by entering</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=all:electron+AND+all:proton">http://export.arxiv.org/api/query?search_query=all:electron+AND+all:proton</a></p>
+<p>What you see will look different from the HTML interface, but it
+contains the same information as the search done with the human
+interface. The reason why the results look different is that the API
+returns results in the Atom 1.0 format, and not HTML. Since Atom is
+defined as an XML grammar, it is much easier to digest for programs than
+HTML. The API is not intended to be used inside a web browser by itself,
+but this is a particularly simple way to debug a program that does use
+the API.</p>
+<p>You might notice that your web browser has asked you if you want to
+“subscribe to this feed” after you enter the API url. This is because
+Atom is one of the formats used by web sites to syndicate their content.
+These feeds are usually read with feed reader software, and are what is
+generated by the existing <a href="http://arxiv.org/help/rss">arXiv rss feeds</a>.
+The current arXiv feeds only give you updates on new papers within the
+category you specify. One immediately useful thing to do with the API
+then is to generate your own feed, based on a custom query!</p>
+<p>To learn more about how to construct custom search queries with the API,
+see the appendix on the <a href="https://info.arxiv.org/help/api/user-manual.html#query_details">details of query construction</a>.
+To learn about what information is returned by the API, see the section
+on <a href="https://info.arxiv.org/help/api/user-manual.html#api_response">the API response</a>. To learn more about writing
+programs to call the API, and digest the responses, we suggest starting
+with the section on <a href="https://info.arxiv.org/help/api/user-manual.html#Architecture">Structure of the API</a>.</p>
+<p><span id="Architecture"></span></p>
+<h2 id="3-structure-of-the-api">3. Structure of the API</h2>
+<p>In this section, we'll go over some of the details of interacting with
+the API. A diagram of a typical API call is shown below:</p>
+<p><strong>Example: A typical API call</strong></p>
+<pre id="__code_1"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_1 &gt; code"></button><code>Request from url: http://export.arxiv.org/api/query  (1)
+ with parameters: search_query=all:electron
+                .
+                .
+                .
+API server processes the request and sends the response
+                .
+                .
+                .
+Response received by client.  (2)
+</code></pre>
+<ol>
+<li>
+<p>The request can be made via HTTP GET, in which the parameters are
+    encoded in the url, or via an HTTP POST in which the parameters are
+    encoded in the HTTP request header. Most client libraries support
+    both methods.</p>
+</li>
+<li>
+<p>If all goes well, the HTTP header will show a 200 OK status, and the
+    response body will contain the Atom response content as shown in the
+    <a href="https://info.arxiv.org/help/api/user-manual.html#response_example">example response</a>.</p>
+</li>
+</ol>
+<p><span id="_calling_the_api"></span></p>
+<h3 id="31-calling-the-api">3.1. Calling the API</h3>
+<p>As mentioned above, the API can be called with an HTTP request of type
+GET or POST. For our purposes, the main difference is that the
+parameters are included in the url for a GET request, but not for the
+POST request. Thus if the parameters list is unusually long, a POST
+request might be preferred.</p>
+<p>The parameters for each of the API methods are explained below. For each
+method, the base url is</p>
+<pre id="__code_2"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_2 &gt; code"></button><code>http://export.arxiv.org/api/{method_name}?{parameters}
+</code></pre>
+<p><span id="_query_interface"></span></p>
+<h4 id="311-query-interface">3.1.1. Query Interface</h4>
+<p>The API query interface has <code>method_name=query</code>. The table below
+outlines the parameters that can be passed to the query interface.
+Parameters are separated with the <code>&amp;</code> sign in the constructed url's.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">query</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><strong>parameters</strong></td>
+<td align="left"><strong>type</strong></td>
+<td align="left"><strong>defaults</strong></td>
+<td align="left"><strong>required</strong></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>search_query</code></td>
+<td align="left">string</td>
+<td align="left">None</td>
+<td align="left">No</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>id_list</code></td>
+<td align="left">comma-delimited string</td>
+<td align="left">None</td>
+<td align="left">No</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>start</code></td>
+<td align="left">int</td>
+<td align="left">0</td>
+<td align="left">No</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>max_results</code></td>
+<td align="left">int</td>
+<td align="left">10</td>
+<td align="left">No</td>
+</tr>
+</tbody>
+</table></div></div>
+<p><span id="search_query_and_id_list"></span></p>
+<h5 id="3111-search_query-and-id_list-logic">3.1.1.1. search_query and id_list logic</h5>
+<p>We have already seen the use of <code>search_query</code> in the
+<a href="https://info.arxiv.org/help/api/user-manual.html#Quickstart">quickstart</a> section. The <code>search_query</code> takes a string
+that represents a search query used to find articles. The construction
+of <code>search_query</code> is described in the <a href="https://info.arxiv.org/help/api/user-manual.html#query_details">search query construction
+appendix</a>. The <code>id_list</code> contains a comma-delimited list
+of arXiv id's.</p>
+<p>The logic of these two parameters is as follows:</p>
+<ul>
+<li>
+<p>If only <code>search_query</code> is given (<code>id_list</code> is blank or not given),
+    then the API will return results for each article that matches the
+    search query.</p>
+</li>
+<li>
+<p>If only <code>id_list</code> is given (<code>search_query</code> is blank or not given),
+    then the API will return results for each article in <code>id_list</code>.</p>
+</li>
+<li>
+<p>If <em>BOTH</em> <code>search_query</code> and <code>id_list</code> are given, then the API will
+    return each article in <code>id_list</code> that matches <code>search_query</code>. This
+    allows the API to act as a results filter.</p>
+</li>
+</ul>
+<p>This is summarized in the following table:</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong><code>search_query</code> present</strong></td>
+<td align="left"><strong><code>id_list</code> present</strong></td>
+<td align="left"><strong>API returns</strong></td>
+</tr>
+<tr>
+<td align="left">yes</td>
+<td align="left">no</td>
+<td align="left">articles that match <code>search_query</code></td>
+</tr>
+<tr>
+<td align="left">no</td>
+<td align="left">yes</td>
+<td align="left">articles that are in <code>id_list</code></td>
+</tr>
+<tr>
+<td align="left">yes</td>
+<td align="left">yes</td>
+<td align="left">articles in <code>id_list</code> that also match <code>search_query</code></td>
+</tr>
+</tbody>
+</table></div></div>
+<p><span id="paging"><span></span></span></p>
+<h5 id="3112-start-and-max_results-paging">3.1.1.2. start and max_results paging</h5>
+<p>Many times there are hundreds of results for an API query. Rather than
+download information about all the results at once, the API offers a
+paging mechanism through <code>start</code> and <code>max_results</code> that allows you to
+download chucks of the result set at a time. Within the total results
+set, <code>start</code> defines the index of the first returned result, <em>using
+0-based indexing</em>. <code>max_results</code> is the number of results returned by
+the query. For example, if wanted to step through the results of a
+<code>search_query</code> of <code>all:electron</code>, we would construct the urls:</p>
+<pre id="__code_3"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_3 &gt; code"></button><code tabindex="0">http://export.arxiv.org/api/query?search_query=all:electron&amp;start=0&amp;max_results=10 (1)
+http://export.arxiv.org/api/query?search_query=all:electron&amp;start=10&amp;max_results=10 (2)
+http://export.arxiv.org/api/query?search_query=all:electron&amp;start=20&amp;max_results=10 (3)
+</code></pre>
+<ol>
+<li>
+<p>Get results 0-9</p>
+</li>
+<li>
+<p>Get results 10-19</p>
+</li>
+<li>
+<p>Get results 20-29</p>
+</li>
+</ol>
+<p>Detailed examples of how to perform paging in a variety of programming
+languages can be found in the <a href="https://info.arxiv.org/help/api/user-manual.html#detailed_examples">examples</a> section.</p>
+<p>In cases where the API needs to be called multiple times in a row, we encourage you to play nice and incorporate a 3 second delay in your code. The <a href="https://info.arxiv.org/help/api/user-manual.html#detailed_examples">detailed examples</a> below illustrate how to do this in a variety of languages. </p>
+<p>Because of speed limitations in our implementation of the API, the
+maximum number of results returned from a single call (<code>max_results</code>) is
+limited to 30000 in slices of at most 2000 at a time, using the
+<code>max_results</code> and <code>start</code> query parameters. For example to retrieve
+matches 6001-8000:
+http://export.arxiv.org/api/query?search_query=all:electron&amp;start=6000&amp;max_results=2000</p>
+<p>Large result sets put considerable load on the server and also take a
+long time to render. We recommend to refine queries which return more
+than 1,000 results, or at least request smaller slices. For bulk
+metadata harvesting or set information, etc., the
+<a href="https://info.arxiv.org/help/oa/index.html">OAI-PMH</a> interface is more suitable. A request with
+<code>max_results</code> &gt;30,000 will result in an HTTP 400 error code with
+appropriate explanation. A request for 30000 results will typically take
+a little over 2 minutes to return a response of over 15MB. Requests for
+fewer results are much faster and correspondingly smaller.</p>
+<p><span id="sort"></span></p>
+<h5 id="3113-sort-order-for-return-results">3.1.1.3. sort order for return results</h5>
+<p>There are two options for for the result set to the API search, <code>sortBy</code>
+and <code>sortOrder</code>.</p>
+<p><code>sortBy</code> can be "relevance" (Apache Lucene's default <a href="https://lucene.apache.org/core/3_0_3/api/core/org/apache/lucene/search/Sort.html">RELEVANCE</a> ordering), "lastUpdatedDate", "submittedDate"</p>
+<p><code>sortOrder</code> can be either "ascending" or "descending"</p>
+<p>A sample query using these new parameters looks like:</p>
+<pre id="__code_4"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_4 &gt; code"></button><code tabindex="0">http://export.arxiv.org/api/query?search_query=ti:"electron thermal conductivity"&amp;sortBy=lastUpdatedDate&amp;sortOrder=ascending
+</code></pre>
+<p><span id="api_response"></span></p>
+<h3 id="32-the-api-response">3.2. The API Response</h3>
+<p>Everything returned by the API in the body of the HTTP responses is Atom
+1.0, including <a href="https://info.arxiv.org/help/api/user-manual.html#errors">errors</a>. Atom is a grammar of XML that is
+popular in the world of content syndication, and is very similar to RSS
+for this purpose. Typically web sites with dynamic content such as news
+sites and blogs will publish their content as Atom or RSS feeds.
+However, Atom is a general format that embodies the concept of a list of
+items, and thus is well-suited to returning the arXiv search results.</p>
+<p><span id="atom_feed_outline"></span></p>
+<h3 id="33-outline-of-an-atom-feed">3.3. Outline of an Atom feed</h3>
+<p>In this section we will discuss the contents of the Atom documents
+returned by the API. To see the full explanation of the Atom 1.0 format,
+please see the <a href="http://www.ietf.org/rfc/rfc4287.txt">Atom
+specification</a>.</p>
+<p>An API response consists of an Atom <code>&lt;feed&gt;</code> element which contains
+metadata about the API call performed, as well as child <code>&lt;entry&gt;</code>
+elements which embody the metadata for each of the returned results.
+Below we explain each of the elements and attributes. We will base our
+discussion on the <a href="https://info.arxiv.org/help/api/user-manual.html#response_example">sample results feed</a> discussed in
+the examples section.</p>
+<p><sup> You may notice that the results from the API are ordered differently that the results given by the <a href="http://arxiv.org/find">HTML arXiv search interface</a>. The HTML interface automatically sorts results in descending order based on the date of their submission, while the API returns results according to relevancy from the internal search engine. Thus when debugging a search query, we encourage you to use the API within a web browser, rather than the HTML search interface. If you want sorting by date, you can always do this within your programs by reading the <code>&lt;published&gt;</code> tag for each entry as explained <a href="https://info.arxiv.org/help/api/user-manual.html#title_id_published_updated">below</a>. </sup></p>
+<p><span id="_feed_metadata"></span></p>
+<h4 id="331-feed-metadata">3.3.1. Feed Metadata</h4>
+<p>Every response will contain the line:</p>
+<pre id="__code_5"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_5 &gt; code"></button><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+</code></pre>
+<p>to signify that we are receiving XML 1.0 with a UTF-8 encoding.
+Following that line will be a line indicating that we are receiving an
+Atom feed:</p>
+<pre id="__code_6"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_6 &gt; code"></button><code>&lt;feed xmlns="http://www.w3.org/2005/Atom"
+xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;
+</code></pre>
+<p>You will notice that three XML namespaces are defined. The default
+namespace signifies that we are dealing with Atom 1.0. The other two
+namespaces define extensions to Atom that we describe below.</p>
+<p><span id="_lt_title_gt_lt_id_gt_lt_link_gt_and_lt_updated_gt"></span></p>
+<h5 id="3311-title-id-link-and-updated">3.3.1.1. &lt;title&gt;, &lt;id&gt;, &lt;link&gt; and &lt;updated&gt;</h5>
+<p>The <code>&lt;title&gt;</code> element gives the title for the feed:</p>
+<pre id="__code_7"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_7 &gt; code"></button><code tabindex="0">&lt;title xmlns="http://www.w3.org/2005/Atom"&gt;
+    ArXiv Query:  search_query=all:electron&amp;amp;id_list=&amp;amp;start=0&amp;amp;max_results=1
+&lt;/title&gt;
+</code></pre>
+<p>The title contains a canonicalized version of the query used to call the
+API. The canonicalization includes all parameters, using their defaults
+if they were not included, and always puts them in the order
+<code>search_query</code>,<code>id_list</code>,<code>start</code>,<code>max_results</code>, even if they were
+specified in a different order in the actual query.</p>
+<p>The <code>&lt;id&gt;</code> element serves as a unique id for this query, and is useful
+if you are writing a program such as a feed reader that wants to keep
+track of all the feeds requested in the past. This id can then be used
+as a key in a database.</p>
+<pre id="__code_8"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_8 &gt; code"></button><code>&lt;id xmlns="http://www.w3.org/2005/Atom"&gt;
+    http://arxiv.org/api/cHxbiOdZaP56ODnBPIenZhzg5f8
+&lt;/id&gt;
+</code></pre>
+<p>The id is guaranteed to be unique for each query.</p>
+<p>The <code>&lt;link&gt;</code> element provides a URL that can be used to retrieve this
+feed again.</p>
+<pre id="__code_9"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_9 &gt; code"></button><code tabindex="0">&lt;link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/api/query?search_query=all:electron&amp;amp;id_list=&amp;amp;start=0&amp;amp;max_results=1" rel="self" type="application/atom+xml"/&gt;
+</code></pre>
+<p>Note that the url in the link represents the canonicalized version of
+the query. The <code>&lt;link&gt;</code> provides a GET requestable url, even if the
+original request was done via POST.</p>
+<p>The <code>&lt;updated&gt;</code> element provides the last time the contents of the feed
+were last updated:</p>
+<pre id="__code_10"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_10 &gt; code"></button><code tabindex="0">&lt;updated xmlns="http://www.w3.org/2005/Atom"&gt;2007-10-08T00:00:00-04:00&lt;/updated&gt;
+</code></pre>
+<p><sup>Because the arXiv submission process works on a 24 hour submission cycle, new articles are only available to the API on the midnight <em>after</em> the articles were processed. The <code>&lt;updated&gt;</code> tag thus reflects the midnight of the day that you are calling the API. <strong>This is very important</strong> - search results do not change until new articles are added. Therefore there is no need to call the API more than once in a day for the same query. Please cache your results. This primarily applies to production systems, and of course you are free to play around with the API while you are developing your program!</sup></p>
+<p><span id="_opensearch_extension_elements"></span></p>
+<h5 id="3312-opensearch-extension-elements">3.3.1.2. OpenSearch Extension Elements</h5>
+<p>There are several extension elements defined in the OpenSearch namespace</p>
+<pre id="__code_11"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_11 &gt; code"></button><code>http://a9.com/-/spec/opensearch/1.1/
+</code></pre>
+<p><a href="http://www.opensearch.org/Home">OpenSearch</a> is a lightweight technology
+that acts in a similar way as the Web Services Description Language. The
+OpenSearch elements we have included allow OpenSearch enabled clients to
+digest our results. Such clients often include search result aggregators
+and browser pluggins that allow searching from a variety of sources.</p>
+<p>The OpenSearch extension elements can still be useful to you even if you
+are not writing one of these applications. The
+<code>&lt;opensearch:totalResults&gt;</code> element lists how many results are in the
+result set for the query:</p>
+<pre id="__code_12"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_12 &gt; code"></button><code tabindex="0">&lt;opensearch:totalResults xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;
+   1000
+&lt;/opensearch:totalResults&gt;
+</code></pre>
+<p>This can be very useful when implementing <a href="https://info.arxiv.org/help/api/user-manual.html#paging">paging of search
+results</a>. The other two elements <code>&lt;opensearch:startIndex&gt;</code>, and
+<code>&lt;opensearch:itemsPerPage&gt;</code> are analogous to <code>start</code>, and <code>max_results</code>
+<a href="https://info.arxiv.org/help/api/user-manual.html#paging">discussed above</a>.</p>
+<pre id="__code_13"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_13 &gt; code"></button><code tabindex="0">&lt;opensearch:startIndex xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;
+   0
+&lt;/opensearch:startIndex&gt;
+&lt;opensearch:itemsPerPage xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;
+   1
+&lt;/opensearch:itemsPerPage&gt;
+</code></pre>
+<p><span id="_entry_metadata"></span></p>
+<h4 id="332-entry-metadata">3.3.2. Entry Metadata</h4>
+<p>If there are no errors, the <code>&lt;feed&gt;</code> element contains 0 or more child
+<code>&lt;entry&gt;</code> elements with each <code>&lt;entry&gt;</code> representing an article in the
+returned results set. As explained in the <a href="https://info.arxiv.org/help/api/user-manual.html#errors">errors</a> section, if
+there are errors, a single <code>&lt;entry&gt;</code> element representing the error is
+returned. Below the element description describes the elements for
+<code>&lt;entry&gt;</code>'s representing arXiv articles. For a general discussion of
+arXiv metadata, see the <a href="https://info.arxiv.org/help/prep.html">arXiv metadata
+explanation</a>.</p>
+<p><span id="title_id_published_updated"></span></p>
+<h5 id="3321-title-id-published-and-updated">3.3.2.1. &lt;title&gt;, &lt;id&gt;, &lt;published&gt;, and &lt;updated&gt;</h5>
+<p>The <code>&lt;title&gt;</code> element contains the title of the article returned:</p>
+<pre id="__code_14"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_14 &gt; code"></button><code tabindex="0">&lt;title xmlns="http://www.w3.org/2005/Atom"&gt;
+    Multi-Electron Production at High Transverse Momenta in ep Collisions at HERA
+&lt;/title&gt;
+</code></pre>
+<p>The <code>&lt;id&gt;</code> element contains a url that resolves to the abstract page for
+that article:</p>
+<pre id="__code_15"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_15 &gt; code"></button><code>&lt;id xmlns="http://www.w3.org/2005/Atom"&gt;
+    http://arxiv.org/abs/hep-ex/0307015
+&lt;/id&gt;
+</code></pre>
+<p>If you want only the arXiv id for the article, you can remove the
+leading <code>http://arxiv.org/abs/</code> in the <code>&lt;id&gt;</code>.</p>
+<p>The <code>&lt;published&gt;</code> tag contains the date in which the <code>first</code> version of
+this article was submitted and processed. The <code>&lt;updated&gt;</code> element
+contains the date on which the retrieved article was submitted and
+processed. If the version is version 1, then <code>&lt;published&gt; == &lt;updated&gt;</code>,
+otherwise they are different. In the example below, the article
+retrieved was version 2, so <code>&lt;updated&gt;</code> and <code>&lt;published&gt;</code> are different
+(see the <a href="http://export.arxiv.org/api/query?id_list=cond-mat/0702661v2">original
+query</a>).</p>
+<pre id="__code_16"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_16 &gt; code"></button><code>&lt;published xmlns="http://www.w3.org/2005/Atom"&gt;
+    2007-02-27T16:02:02-05:00
+&lt;/published&gt;
+&lt;updated xmlns="http://www.w3.org/2005/Atom"&gt;
+    2007-06-25T17:09:59-04:00
+&lt;/updated&gt;
+</code></pre>
+<p><span id="_lt_summary_gt_lt_author_gt_and_lt_category_gt"></span></p>
+<h5 id="3322-summary-author-and-category">3.3.2.2. &lt;summary&gt;, &lt;author&gt; and &lt;category&gt;</h5>
+<p>The <code>&lt;summary&gt;</code> element contains the abstract for the article:</p>
+<pre id="__code_17"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_17 &gt; code"></button><code tabindex="0">&lt;summary xmlns="http://www.w3.org/2005/Atom"&gt;
+    Multi-electron production is studied at high electron transverse momentum
+    in positron- and electron-proton collisions using the H1 detector at HERA.
+    The data correspond to an integrated luminosity of 115 pb-1. Di-electron
+    and tri-electron event yields are measured. Cross sections are derived in
+    a restricted phase space region dominated by photon-photon collisions. In
+    general good agreement is found with the Standard Model predictions.
+    However, for electron pair invariant masses above 100 GeV, three
+    di-electron events and three tri-electron events are observed, compared to
+    Standard Model expectations of 0.30 \pm 0.04 and 0.23 \pm 0.04,
+    respectively.
+&lt;/summary&gt;
+</code></pre>
+<p>There is one <code>&lt;author&gt;</code> element for each author of the paper in order of
+authorship. Each <code>&lt;author&gt;</code> element has a <code>&lt;name&gt;</code> sub-element which
+contains the name of the author.</p>
+<pre id="__code_18"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_18 &gt; code"></button><code>&lt;author xmlns="http://www.w3.org/2005/Atom"&gt;
+      &lt;name xmlns="http://www.w3.org/2005/Atom"&gt;H1 Collaboration&lt;/name&gt;
+&lt;/author&gt;
+</code></pre>
+<p>If author affiliation is present, it is included as an
+<code>&lt;arxiv:affiliation&gt;</code> subelement of the <code>&lt;author&gt;</code> element as discussed
+<a href="https://info.arxiv.org/help/api/user-manual.html#extension_elements">below</a>.</p>
+<p>The <code>&lt;category&gt;</code> element is used to describe either an arXiv, ACM, or
+MSC classification. See the <a href="http://arxiv.org/help/prep">arXiv metadata
+explanation</a> for more details about these
+classifications. The <code>&lt;category&gt;</code> element has two attributes, <code>scheme</code>,
+which is the categorization scheme, and <code>term</code> which is the term used in
+the categorization. Here is an example from the query
+<a href="http://export.arxiv.org/api/query?id_list=cs/9901002v1">http://export.arxiv.org/api/query?id_list=cs/9901002v1</a></p>
+<pre id="__code_19"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_19 &gt; code"></button><code tabindex="0">&lt;category xmlns="http://www.w3.org/2005/Atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/&gt;
+&lt;category xmlns="http://www.w3.org/2005/Atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/&gt;
+&lt;category xmlns="http://www.w3.org/2005/Atom" term="I.2.6" scheme="http://arxiv.org/schemas/atom"/&gt;
+</code></pre>
+<p>Note that in this example, there are 3 category elements, one for each
+category. The first two correspond to arXiv categories, and the last one
+to an ACM category. See <a href="https://info.arxiv.org/help/api/user-manual.html#extension_elements">&lt;arxiv&gt; extension
+elements</a> below for information on how to identify
+the arXiv primary category.</p>
+<p><span id="entry_links"></span></p>
+<h5 id="3323-links">3.3.2.3. &lt;link&gt;'s</h5>
+<p>For each entry, there are up to three <code>&lt;link&gt;</code> elements, distinguished
+by their <code>rel</code> and <code>title</code> attributes. The table below summarizes what
+these links refer to</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>rel</strong></td>
+<td align="left"><strong>title</strong></td>
+<td align="left"><strong>refers to</strong></td>
+<td align="left"><strong>always present</strong></td>
+</tr>
+<tr>
+<td align="left">alternate</td>
+<td align="left">-</td>
+<td align="left">abstract page</td>
+<td align="left">yes</td>
+</tr>
+<tr>
+<td align="left">related</td>
+<td align="left">pdf</td>
+<td align="left">pdf</td>
+<td align="left">yes</td>
+</tr>
+<tr>
+<td align="left">related</td>
+<td align="left">doi</td>
+<td align="left">resolved doi</td>
+<td align="left">no</td>
+</tr>
+</tbody>
+</table></div></div>
+<p>For example:</p>
+<pre id="__code_20"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_20 &gt; code"></button><code tabindex="0">&lt;link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/abs/hep-ex/0307015v1" rel="alternate" type="text/html"/&gt;
+&lt;link xmlns="http://www.w3.org/2005/Atom" title="pdf" href="http://arxiv.org/pdf/hep-ex/0307015v1" rel="related" type="application/pdf"/&gt;
+&lt;link xmlns="http://www.w3.org/2005/Atom" title="doi" href="http://dx.doi.org/10.1529/biophysj.104.047340" rel="related"/&gt;
+</code></pre>
+<p><span id="extension_elements"></span></p>
+<h5 id="3324-arxiv-extension-elements">3.3.2.4. &lt;arxiv&gt; extension elements</h5>
+<p>There are several pieces of <a href="http://arxiv.org/help/prep">arXiv metadata</a>
+that are not able to be mapped onto the standard Atom specification. We
+have therefore defined several extension elements which live in the
+<code>arxiv</code> namespace</p>
+<pre id="__code_21"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_21 &gt; code"></button><code>http://arxiv.org/schemas/atom
+</code></pre>
+<p>The arXiv classification system supports multiple &lt;category&gt; tags,
+as well as a primary classification. The primary classification is a
+replica of an Atom &lt;category&gt; tag, except it has the name
+<code>&lt;arxiv:primary_category&gt;</code>. For example, from the query
+<a href="http://export.arxiv.org/api/query?id_list=cs/9901002v1">http://export.arxiv.org/api/query?id_list=cs/9901002v1</a>, we have</p>
+<pre id="__code_22"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_22 &gt; code"></button><code tabindex="0">&lt;arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/&gt;
+</code></pre>
+<p>signifying that <code>cs.LG</code> is the primary arXiv classification for this
+e-print.</p>
+<p>The <code>&lt;arxiv:comment&gt;</code> element contains the typical author comments found
+on most arXiv articles:</p>
+<pre id="__code_23"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_23 &gt; code"></button><code>&lt;arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;
+   23 pages, 8 figures and 4 tables
+&lt;/arxiv:comment&gt;
+</code></pre>
+<p>If the author has supplied affiliation information, then this is
+included as an <code>&lt;arxiv:affiliation&gt;</code> subelement of the standard Atom
+<code>&lt;author&gt;</code> element. For example, from the query
+<a href="http://export.arxiv.org/api/query?id_list=0710.5765v1">http://export.arxiv.org/api/query?id_list=0710.5765v1</a>, we have</p>
+<pre id="__code_24"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_24 &gt; code"></button><code tabindex="0">&lt;author&gt;
+   &lt;name&gt;G. G. Kacprzak&lt;/name&gt;
+   &lt;arxiv:affiliation xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;NMSU&lt;/arxiv:affiliation&gt;
+&lt;/author&gt;
+</code></pre>
+<p>If the author has provided a journal reference for the article, then
+there will be a <code>&lt;arxiv:journal_ref&gt;</code> element with this information:</p>
+<pre id="__code_25"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_25 &gt; code"></button><code>&lt;arxiv:journal_ref xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;
+   Eur.Phys.J. C31 (2003) 17-29
+&lt;/arxiv:journal_ref&gt;
+</code></pre>
+<p>If the author has provided a DOI for the article, then there will be a
+<code>&lt;arxiv:doi&gt;</code> element with this information:</p>
+<pre id="__code_26"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_26 &gt; code"></button><code>&lt;arxiv:doi xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;
+   10.1529/biophysj.104.047340
+&lt;/arxiv:doi&gt;
+</code></pre>
+<p><span id="errors"></span></p>
+<h3 id="34-errors">3.4. Errors</h3>
+<p>Errors are returned as Atom feeds with a single entry representing the
+error. The <code>&lt;summary&gt;</code> for the error contains a helpful error message,
+and the <code>&lt;link&gt;</code> element contains a url to a more detailed explanation
+of the message.</p>
+<p>For example, the API call
+<a href="http://export.arxiv.org/api/query?id_list=1234.12345">http://export.arxiv.org/api/query?id_list=1234.12345</a> contains a
+malformed id, and results in the error</p>
+<pre id="__code_27"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_27 &gt; code"></button><code tabindex="0">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;feed xmlns="http://www.w3.org/2005/Atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;
+  &lt;link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/api/query?search_query=&amp;amp;id_list=1234.12345" rel="self" type="application/atom+xml"/&gt;
+  &lt;title xmlns="http://www.w3.org/2005/Atom"&gt;ArXiv Query: search_query=&amp;amp;id_list=1234.12345&lt;/title&gt;
+  &lt;id xmlns="http://www.w3.org/2005/Atom"&gt;http://arxiv.org/api/kvuntZ8c9a4Eq5CF7KY03nMug+Q&lt;/id&gt;
+  &lt;updated xmlns="http://www.w3.org/2005/Atom"&gt;2007-10-12T00:00:00-04:00&lt;/updated&gt;
+  &lt;opensearch:totalResults xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;1&lt;/opensearch:totalResults&gt;
+  &lt;opensearch:startIndex xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;0&lt;/opensearch:startIndex&gt;
+
+  &lt;opensearch:itemsPerPage xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;1&lt;/opensearch:itemsPerPage&gt;
+  &lt;entry xmlns="http://www.w3.org/2005/Atom"&gt;
+    &lt;id xmlns="http://www.w3.org/2005/Atom"&gt;http://arxiv.org/api/errors#incorrect_id_format_for_1234.12345&lt;/id&gt;
+    &lt;title xmlns="http://www.w3.org/2005/Atom"&gt;Error&lt;/title&gt;
+    &lt;summary xmlns="http://www.w3.org/2005/Atom"&gt;incorrect id format for 1234.12345&lt;/summary&gt;
+    &lt;updated xmlns="http://www.w3.org/2005/Atom"&gt;2007-10-12T00:00:00-04:00&lt;/updated&gt;
+
+    &lt;link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/api/errors#incorrect_id_format_for_1234.12345" rel="alternate" type="text/html"/&gt;
+    &lt;author xmlns="http://www.w3.org/2005/Atom"&gt;
+      &lt;name xmlns="http://www.w3.org/2005/Atom"&gt;arXiv api core&lt;/name&gt;
+    &lt;/author&gt;
+  &lt;/entry&gt;
+&lt;/feed&gt;
+</code></pre>
+<p>The following table gives information on errors that might occur.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>Sample query</strong></td>
+<td align="left"><strong>Error Explanation</strong></td>
+</tr>
+<tr>
+<td align="left"><a href="http://export.arxiv.org/api/query?start=not_an_int">http://export.arxiv.org/api/query?start=not_an_int</a></td>
+<td align="left"><code>start</code> must be an integer</td>
+</tr>
+<tr>
+<td align="left"><a href="http://export.arxiv.org/api/query?start=-1">http://export.arxiv.org/api/query?start=-1</a></td>
+<td align="left"><code>start</code> must be &gt;= 0</td>
+</tr>
+<tr>
+<td align="left"><a href="http://export.arxiv.org/api/query?max_results=not_an_int">http://export.arxiv.org/api/query?max_results=not_an_int</a></td>
+<td align="left"><code>max_results</code> must be an integer</td>
+</tr>
+<tr>
+<td align="left"><a href="http://export.arxiv.org/api/query?max_results=-1">http://export.arxiv.org/api/query?max_results=-1</a></td>
+<td align="left"><code>max_results</code> must be &gt;= 0</td>
+</tr>
+<tr>
+<td align="left"><a href="http://export.arxiv.org/api/query?id_list=1234.1234">http://export.arxiv.org/api/query?id_list=1234.1234</a></td>
+<td align="left">malformed id - see <a href="http://arxiv.org/help/arxiv_identifier#new">arxiv identifier explanation</a></td>
+</tr>
+<tr>
+<td align="left"><a href="http://export.arxiv.org/api/query?id_list=cond%E2%80%94mat/0709123">http://export.arxiv.org/api/query?id_list=cond—mat/0709123</a></td>
+<td align="left">malformed id - see <a href="http://arxiv.org/help/arxiv_identifier#new">arxiv identifier explanation</a></td>
+</tr>
+</tbody>
+</table></div></div>
+<p><span id="Examples"></span></p>
+<h2 id="4-examples">4. Examples</h2>
+<p>Once you have familiarized yourself with the API, you should be able to
+easily write programs that call the API automatically. Most programming
+languages, if not all, have libraries that allow you to make HTTP
+requests. Since Atom is growing, not all languages have libraries that
+support Atom parsing, so most of the programming effort will be in
+digesting the responses you receive. The languages that we know of that
+can easily handle calling the api via HTTP and parsing the results
+include:</p>
+<ul>
+<li>
+<p><a href="http://www.perl.org/">Perl</a> (via
+    <a href="http://search.cpan.org/~gaas/libwww-perl-5.808/lib/LWP.pm">LWP</a>)
+    (<a href="https://info.arxiv.org/help/api/user-manual.html#perl_simple_example">example</a>)</p>
+</li>
+<li>
+<p><a href="http://www.python.org/">Python</a> (via
+    <a href="https://docs.python.org/3/library/index.html">urllib</a>)
+    (<a href="https://info.arxiv.org/help/api/user-manual.html#python_simple_example">example</a>)</p>
+</li>
+<li>
+<p><a href="http://www.ruby-lang.org/">Ruby</a> (via
+    <a href="https://ruby-doc.org/stdlib-2.5.1/libdoc/uri/rdoc/URI.html">uri</a> and
+    <a href="https://ruby-doc.org/stdlib-2.7.0/libdoc/net/http/rdoc/Net/HTTP.html">net::http</a>)
+    (<a href="https://info.arxiv.org/help/api/user-manual.html#ruby_simple_example">example</a>)</p>
+</li>
+<li>
+<p><a href="http://www.php.net/">PHP</a> (via file_get_contents())
+    (<a href="https://info.arxiv.org/help/api/user-manual.html#php_simple_example">example</a>)</p>
+</li>
+</ul>
+<p><span id="_simple_examples"></span></p>
+<h3 id="41-simple-examples">4.1. Simple Examples</h3>
+<p>Below we include code snippets for these languages that perform the bare
+minimum functionality - calling the api and printing the raw Atom
+results. If your favorite language is not up here, write us with an
+example, and we'll be glad to post it!</p>
+<p>All of the simple examples produce an output which looks like:</p>
+<p><span id="response_example"></span>
+Example: A Typical Atom Response</p>
+<pre id="__code_28"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_28 &gt; code"></button><code class="language-atom" tabindex="0">    &lt;?xml version="1.0" encoding="utf-8"?&gt;
+    &lt;feed xmlns="http://www.w3.org/2005/Atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;
+      &lt;link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/api/query?search_query=all:electron&amp;amp;id_list=&amp;amp;start=0&amp;amp;max_results=1" rel="self" type="application/atom+xml"/&gt;
+      &lt;title xmlns="http://www.w3.org/2005/Atom"&gt;ArXiv Query: search_query=all:electron&amp;amp;id_list=&amp;amp;start=0&amp;amp;max_results=1&lt;/title&gt;
+      &lt;id xmlns="http://www.w3.org/2005/Atom"&gt;http://arxiv.org/api/cHxbiOdZaP56ODnBPIenZhzg5f8&lt;/id&gt;
+      &lt;updated xmlns="http://www.w3.org/2005/Atom"&gt;2007-10-08T00:00:00-04:00&lt;/updated&gt;
+      &lt;opensearch:totalResults xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;1000&lt;/opensearch:totalResults&gt;
+      &lt;opensearch:startIndex xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;0&lt;/opensearch:startIndex&gt;
+      &lt;opensearch:itemsPerPage xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"&gt;1&lt;/opensearch:itemsPerPage&gt;
+      &lt;entry xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;
+        &lt;id xmlns="http://www.w3.org/2005/Atom"&gt;http://arxiv.org/abs/hep-ex/0307015&lt;/id&gt;
+        &lt;published xmlns="http://www.w3.org/2005/Atom"&gt;2003-07-07T13:46:39-04:00&lt;/published&gt;
+        &lt;updated xmlns="http://www.w3.org/2005/Atom"&gt;2003-07-07T13:46:39-04:00&lt;/updated&gt;
+        &lt;title xmlns="http://www.w3.org/2005/Atom"&gt;Multi-Electron Production at High Transverse Momenta in ep Collisions at
+      HERA&lt;/title&gt;
+        &lt;summary xmlns="http://www.w3.org/2005/Atom"&gt;  Multi-electron production is studied at high electron transverse momentum in
+    positron- and electron-proton collisions using the H1 detector at HERA. The
+    data correspond to an integrated luminosity of 115 pb-1. Di-electron and
+    tri-electron event yields are measured. Cross sections are derived in a
+    restricted phase space region dominated by photon-photon collisions. In general
+    good agreement is found with the Standard Model predictions. However, for
+    electron pair invariant masses above 100 GeV, three di-electron events and
+    three tri-electron events are observed, compared to Standard Model expectations
+    of 0.30 \pm 0.04 and 0.23 \pm 0.04, respectively.
+    &lt;/summary&gt;
+        &lt;author xmlns="http://www.w3.org/2005/Atom"&gt;
+          &lt;name xmlns="http://www.w3.org/2005/Atom"&gt;H1 Collaboration&lt;/name&gt;
+        &lt;/author&gt;
+        &lt;arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;23 pages, 8 figures and 4 tables&lt;/arxiv:comment&gt;
+        &lt;arxiv:journal_ref xmlns:arxiv="http://arxiv.org/schemas/atom"&gt;Eur.Phys.J. C31 (2003) 17-29&lt;/arxiv:journal_ref&gt;
+        &lt;link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/abs/hep-ex/0307015v1" rel="alternate" type="text/html"/&gt;
+        &lt;link xmlns="http://www.w3.org/2005/Atom" title="pdf" href="http://arxiv.org/pdf/hep-ex/0307015v1" rel="related" type="application/pdf"/&gt;
+        &lt;arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="hep-ex" scheme="http://arxiv.org/schemas/atom"/&gt;
+        &lt;category term="hep-ex" scheme="http://arxiv.org/schemas/atom"/&gt;
+      &lt;/entry&gt;
+    &lt;/feed&gt;
+</code></pre>
+<p><span id="perl_simple_example"></span></p>
+<h4 id="411-perl">4.1.1. Perl</h4>
+<p><a href="http://search.cpan.org/%3Csub%3Egaas/libwww-perl-5.808/lib/LWP.pm">LWP</a>
+is in the default perl installation on most platforms. It can be
+downloaded and installed from
+<a href="http://search.cpan.org/%3C/sub%3Egaas/libwww-perl-5.808/lib/LWP.pm">CPAN</a>.
+Sample code to produce the above output is:</p>
+<pre id="__code_29"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_29 &gt; code"></button><code class="language-perl" tabindex="0">    use LWP;
+    use strict;
+
+    my $url = 'http://export.arxiv.org/api/query?search_query=all:electron&amp;start=0&amp;max_results=1';
+    my $browser = LWP::UserAgent-&gt;new();
+    my $response = $browser-&gt;get($url);
+    print $response-&gt;content();
+</code></pre>
+<p><span id="python_simple_example"></span></p>
+<h4 id="412-python">4.1.2. Python</h4>
+<p>The <a href="http://docs.python.org/lib/module-urllib.html">urllib</a> module is
+part of the <a href="http://docs.python.org/lib/lib.html">python standard
+library</a>, and is included in any
+default installation of python. Sample code to produce the above output in Python 2.7
+is:</p>
+<pre id="__code_30"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_30 &gt; code"></button><code class="language-python" tabindex="0">    import urllib
+    url = 'http://export.arxiv.org/api/query?search_query=all:electron&amp;start=0&amp;max_results=1'
+    data = urllib.urlopen(url).read()
+    print data
+</code></pre>
+<p>wheras in Python 3 an example would be:</p>
+<pre id="__code_31"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_31 &gt; code"></button><code class="language-python" tabindex="0">    import urllib.request as libreq
+    with libreq.urlopen('http://export.arxiv.org/api/query?search_query=all:electron&amp;start=0&amp;max_results=1') as url:
+      r = url.read()
+    print(r)
+</code></pre>
+<p><span id="ruby_simple_example"></span></p>
+<h4 id="413-ruby">4.1.3. Ruby</h4>
+<p>The
+<a href="http://www.ruby-doc.org/stdlib/libdoc/net/http/rdoc/index.html">net/http</a>
+and <a href="http://www.ruby-doc.org/stdlib/libdoc/uri/rdoc/">uri</a> modules are
+part of the <a href="http://www.ruby-doc.org/stdlib/">ruby standard library</a>,
+and are included in any default installation of ruby. Sample code to
+produce the above output is:</p>
+<pre id="__code_32"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_32 &gt; code"></button><code class="language-ruby" tabindex="0">    require 'net/http'
+    require 'uri'
+    url = URI.parse('http://export.arxiv.org/api/query?search_query=all:electron&amp;start=0&amp;max_results=1')
+    res = Net::HTTP.get_response(url)
+    print res.body
+</code></pre>
+<p><span id="php_simple_example"></span></p>
+<h4 id="414-php">4.1.4. PHP</h4>
+<p>The file_get_contents() function is part of the PHP core language:</p>
+<pre id="__code_33"><button class="md-clipboard md-icon" title="Copy to clipboard" data-clipboard-target="#__code_33 &gt; code"></button><code class="language-php" tabindex="0">    &lt;?php
+    $url = 'http://export.arxiv.org/api/query?search_query=all:electron&amp;start=0&amp;max_results=1';
+    $response = file_get_contents($url);
+    print_r($response);
+    ?&gt;
+</code></pre>
+<p><span id="detailed_examples"></span></p>
+<h3 id="42-detailed-parsing-examples">4.2. Detailed Parsing Examples</h3>
+<p>The examples above don't cover how to parse the Atom results returned to
+extract the information you might be interested in. They also don't
+cover how to do more advanced programming of the API to perform such
+tasks as downloading chunks of the full results list one page at a time.
+The table below contains links to more detailed examples for each of the
+languages above, as well as to the libraries used to parse Atom.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Language</td>
+<td align="left">Library</td>
+<td align="left">Parsing Example</td>
+<td align="left">Paging Example</td>
+</tr>
+<tr>
+<td align="left">Perl</td>
+<td align="left"><a href="http://search.cpan.org/~miyagawa/XML-Atom-0.27/">XML::Atom</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/perl_arXiv_parsing_example.txt">parsing</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/perl_arXiv_paging_example.txt">paging</a></td>
+</tr>
+<tr>
+<td align="left">Python</td>
+<td align="left"><a href="https://github.com/kurtmckee/feedparser">feedparser</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/python_arXiv_parsing_example.txt">parsing</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/python_arXiv_paging_example.txt">paging</a></td>
+</tr>
+<tr>
+<td align="left">Ruby</td>
+<td align="left"><a href="http://sporkmonger.com/2005/08/11/tutorial">feedtools</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/ruby_arXiv_parsing_example.txt">parsing</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/ruby_arXiv_paging_example.txt">paging</a></td>
+</tr>
+<tr>
+<td align="left">PHP</td>
+<td align="left"><a href="http://simplepie.org/">SimplePie</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/php_arXiv_parsing_example.txt">parsing</a></td>
+<td align="left"><a href="https://info.arxiv.org/help/api/examples/php_arXiv_paging_example.txt">paging</a></td>
+</tr>
+</tbody>
+</table></div></div>
+<p><span id="Appendices"></span></p>
+<h2 id="5-appendices">5. Appendices</h2>
+<p><span id="query_details"></span></p>
+<h3 id="51-details-of-query-construction">5.1. Details of Query Construction</h3>
+<p>As outlined in the <a href="https://info.arxiv.org/help/api/user-manual.html#Architecture">Structure of the API</a> section, the
+interface to the API is quite simple. This simplicity, combined with
+<code>search_query</code> construction, and result set filtering through <code>id_list</code>
+makes the API a powerful tool for harvesting data from the arXiv. In
+this section, we outline the possibilities for constructing
+<code>search_query</code>'s to retrieve our desired article lists. We outlined how
+to use the <code>id_list</code> parameter to filter results sets in <a href="https://info.arxiv.org/help/api/user-manual.html#search_query_and_id_list">search_query
+and id_list logic</a>.</p>
+<p>In the arXiv search engine, each article is divided up into a number of
+fields that can individually be searched. For example, the titles of an
+article can be searched, as well as the author list, abstracts, comments
+and journal reference. To search one of these fields, we simply prepend
+the field prefix followed by a colon to our search term. For example,
+suppose we wanted to find all articles by the author
+<code>Adrian Del Maestro</code>. We could construct the following query</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=au:del_maestro">http://export.arxiv.org/api/query?search_query=au:del_maestro</a></p>
+<p>This returns nine results. The following table lists the field prefixes
+for all the fields that can be searched.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>prefix</strong></td>
+<td align="left"><strong>explanation</strong></td>
+</tr>
+<tr>
+<td align="left">ti</td>
+<td align="left">Title</td>
+</tr>
+<tr>
+<td align="left">au</td>
+<td align="left">Author</td>
+</tr>
+<tr>
+<td align="left">abs</td>
+<td align="left">Abstract</td>
+</tr>
+<tr>
+<td align="left">co</td>
+<td align="left">Comment</td>
+</tr>
+<tr>
+<td align="left">jr</td>
+<td align="left">Journal Reference</td>
+</tr>
+<tr>
+<td align="left">cat</td>
+<td align="left">Subject Category</td>
+</tr>
+<tr>
+<td align="left">rn</td>
+<td align="left">Report Number</td>
+</tr>
+<tr>
+<td align="left">id</td>
+<td align="left">Id (use <code>id_list</code> instead)</td>
+</tr>
+<tr>
+<td align="left">all</td>
+<td align="left">All of the above</td>
+</tr>
+</tbody>
+</table></div></div>
+<p><sup>Note: The <code>id_list</code> parameter should be used rather than <code>search_query=id:xxx</code> to properly handle article versions. In addition, note that <code>all:</code> searches in each of the fields simultaneously. </sup></p>
+<p>The API provides one date filter, <code>submittedDate</code>, that allow you to select data within a given date range of when the data was submitted to arXiv. The expected format is <code>[YYYYMMDDTTTT+TO+YYYYMMDDTTTT]</code> were the <code>TTTT</code> is provided in 24 hour time to the minute, in GMT. We could construct the following query using <code>submittedDate</code>.</p>
+<p><a href="https://export.arxiv.org/api/query?search_query=au:del_maestro+AND+submittedDate:[202301010600+TO+202401010600]">https://export.arxiv.org/api/query?search_query=au:del_maestro+AND+submittedDate:[202301010600+TO+202401010600]</a></p>
+<p>The API allows advanced query construction by combining these search
+fields with Boolean operators. For example, suppose we want to find all
+articles by the author <code>Adrian DelMaestro</code> that also contain the word
+<code>checkerboard</code> in the title. We could construct the following query,
+using the <code>AND</code> operator:</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=au:del_maestro+AND+ti:checkerboard">http://export.arxiv.org/api/query?search_query=au:del_maestro+AND+ti:checkerboard</a></p>
+<p>As expected, this query picked out the one of the nine previous results
+with <code>checkerboard</code> in the title. Note that we included <code>+</code> signs in the
+urls to the API. In a url, a <code>+</code> sign encodes a space, which is useful
+since spaces are not allowed in url's. It is always a good idea to
+escape the characters in your url's, which is a common feature in most
+programming libraries that deal with url's. Note that the <code>&lt;title&gt;</code> of
+the returned feed has spaces in the query constructed. It is a good idea
+to look at <code>&lt;title&gt;</code> to see if you have escaped your url correctly.</p>
+<p>The following table lists the three possible Boolean operators.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>AND</code></td>
+</tr>
+<tr>
+<td align="left"><code>OR</code></td>
+</tr>
+<tr>
+<td align="left"><code>ANDNOT</code></td>
+</tr>
+</tbody>
+</table></div></div>
+<p>The <code>ANDNOT</code> Boolean operator is particularly useful, as it allows us to
+filter search results based on certain fields. For example, if we wanted
+all of the articles by the author <code>Adrian DelMaestro</code> with titles that
+<em>did not</em> contain the word <code>checkerboard</code>, we could construct the
+following query:</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=au:del_maestro+ANDNOT+ti:checkerboard">http://export.arxiv.org/api/query?search_query=au:del_maestro+ANDNOT+ti:checkerboard</a></p>
+<p>As expected, this query returns eight results.</p>
+<p>Finally, even more complex queries can be used by using parentheses for
+grouping the Boolean expressions. To include parentheses in in a url,
+use <code>%28</code> for a left-parens <code>(</code>, and <code>%29</code> for a right-parens <code>)</code>. For
+example, if we wanted all of the articles by the author
+<code>Adrian DelMaestro</code> with titles that <em>did not</em> contain the words
+<code>checkerboard</code>, OR <code>Pyrochore</code>, we could construct the following query:</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=au:del_maestro+ANDNOT+%28ti:checkerboard+OR+ti:Pyrochlore%29">http://export.arxiv.org/api/query?search_query=au:del_maestro+ANDNOT+%28ti:checkerboard+OR+ti:Pyrochlore%29</a></p>
+<p>This query returns three results. Notice that the <code>&lt;title&gt;</code> element
+displays the parenthesis correctly meaning that we used the correct url
+escaping.</p>
+<p>So far we have only used single words as the field terms to search for.
+You can include entire phrases by enclosing the phrase in double quotes,
+escaped by <code>%22</code>. For example, if we wanted all of the articles by the
+author <code>Adrian DelMaestro</code> with titles that contain
+<code>quantum criticality</code>, we could construct the following query:</p>
+<p><a href="http://export.arxiv.org/api/query?search_query=au:del_maestro+AND+ti:%22quantum+criticality%22">http://export.arxiv.org/api/query?search_query=au:del_maestro+AND+ti:%22quantum+criticality%22</a></p>
+<p>This query returns one result, and notice that the feed <code>&lt;title&gt;</code>
+contains double quotes as expected. The table below lists the two
+grouping operators used in the API.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>symbol</strong></td>
+<td align="left"><strong>encoding</strong></td>
+<td align="left"><strong>explanation</strong></td>
+</tr>
+<tr>
+<td align="left">( )</td>
+<td align="left">%28 %29</td>
+<td align="left">Used to group Boolean expressions for Boolean operator precedence.</td>
+</tr>
+<tr>
+<td align="left">double quotes</td>
+<td align="left">%22 %22</td>
+<td align="left">Used to group multiple words into phrases to search a particular field.</td>
+</tr>
+<tr>
+<td align="left">space</td>
+<td align="left">+</td>
+<td align="left">Used to extend a <code>search_query</code> to include multiple fields.</td>
+</tr>
+</tbody>
+</table></div></div>
+<p><span id="_a_note_on_article_versions"></span></p>
+<h4 id="511-a-note-on-article-versions">5.1.1. A Note on Article Versions</h4>
+<p>Each arXiv article has a version associated with it. The first time an
+article is posted, it is given a version number of 1. When subsequent
+corrections are made to an article, it is resubmitted, and the version
+number is incremented. At any time, any version of an article may be
+retrieved.</p>
+<p>When using the API, if you want to retrieve the latest version of an
+article, you may simply enter the arxiv id in the <code>id_list</code> parameter.
+If you want to retrieve information about a specific version, you can do
+this by appending <code>vn</code> to the id, where <code>n</code> is the version number you
+are interested in.</p>
+<p>For example, to retrieve the latest version of <code>cond-mat/0207270</code>, you
+could use the query
+<a href="http://export.arxiv.org/api/query?id_list=cond-mat/0207270">http://export.arxiv.org/api/query?id_list=cond-mat/0207270</a>. To
+retrieve the very first version of this article, you could use the query
+<a href="http://export.arxiv.org/api/query?id_list=cond-mat/0207270v1">http://export.arxiv.org/api/query?id_list=cond-mat/0207270v1</a></p>
+<p><span id="_details_of_atom_results_returned"></span></p>
+<h3 id="52-details-of-atom-results-returned">5.2. Details of Atom Results Returned</h3>
+<p>The following table lists each element of the returned Atom results. For
+a more detailed explanation see <a href="https://info.arxiv.org/help/api/user-manual.html#atom_feed_outline">Outline of an Atom
+Feed</a>.</p>
+<div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><strong>element</strong></td>
+<td align="left"><strong>explanation</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>feed elements</strong></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;title&gt;</code></td>
+<td align="left">The title of the feed containing a canonicalized query string.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;id&gt;</code></td>
+<td align="left">A unique id assigned to this query.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;updated&gt;</code></td>
+<td align="left">The last time search results for this query were updated. Set to midnight of the current day.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;link&gt;</code></td>
+<td align="left">A url that will retrieve this feed via a GET request.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;opensearch:totalResults&gt;</code></td>
+<td align="left">The total number of search results for this query.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;opensearch:startIndex&gt;</code></td>
+<td align="left">The 0-based index of the first returned result in the total results list.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;opensearch:itemsPerPage&gt;</code></td>
+<td align="left">The number of results returned.</td>
+</tr>
+<tr>
+<td align="left"><strong>entry elements</strong></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;title&gt;</code></td>
+<td align="left">The title of the article.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;id&gt;</code></td>
+<td align="left">A url <code>http://arxiv.org/abs/id</code></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;published&gt;</code></td>
+<td align="left">The date that <code>version 1</code> of the article was submitted.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;updated&gt;</code></td>
+<td align="left">The date that the retrieved version of the article was submitted. Same as <code>&lt;published&gt;</code> if the retrieved version is version 1.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;summary&gt;</code></td>
+<td align="left">The article abstract.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;author&gt;</code></td>
+<td align="left">One for each author. Has child element <code>&lt;name&gt;</code> containing the author name.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;link&gt;</code></td>
+<td align="left">Can be up to 3 given url's associated with this article.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;category&gt;</code></td>
+<td align="left">The arXiv or ACM or MSC category for an article if present.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;arxiv:primary_category&gt;</code></td>
+<td align="left">The primary arXiv category.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;arxiv:comment&gt;</code></td>
+<td align="left">The authors comment if present.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;arxiv:affiliation&gt;</code></td>
+<td align="left">The author's affiliation included as a subelement of <code>&lt;author&gt;</code> if present.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;arxiv:journal_ref&gt;</code></td>
+<td align="left">A journal reference if present.</td>
+</tr>
+<tr>
+<td align="left"><code>&lt;arxiv:doi&gt;</code></td>
+<td align="left">A url for the resolved DOI to an external resource if present.</td>
+</tr>
+<tr>
+<td align="left"><span id="subject_classifications"></span></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table></div></div>
+<h3 id="53-subject-classifications">5.3. Subject Classifications</h3>
+<p>For the complete list of arXiv subject classifications, please visit the
+<a href="https://arxiv.org/category_taxonomy">taxonomy</a> page.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+<div class="arxiv-footer" role="navigation" aria-label="Secondary">
+  <div class="column">
+    <ul>
+      <li><a href="https://arxiv.org/about">About</a></li>
+      <li><a href="https://arxiv.org/help">Help</a></li>
+    </ul>
+  </div>
+  <div class="column">
+    <ul>
+      <li><a href="https://arxiv.org/help/license">Copyright</a></li>
+      <li><a href="https://arxiv.org/help/policies/privacy_policy">Privacy Policy</a></li>
+    </ul>
+  </div>
+  <div class="column">
+    <ul>
+      <li>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" class="icon filter-black" role="presentation"><title>contact arXiv</title><desc>Click here to contact arXiv</desc><path d="M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7 22.4 17.4 52.1 39.5 154.1 113.6 21.1 15.4 56.7 47.8 92.2 47.6 35.7.3 72-32.8 92.3-47.6 102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4 132.7-96.3 142.8-104.7 173.4-128.7 5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9 30.6 23.9 40.7 32.4 173.4 128.7 16.8 12.2 50.2 41.8 73.4 41.4z"></path></svg>
+        <a href="https://arxiv.org/help/contact"> Contact</a>
+      </li>
+      <li>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" class="icon filter-black" role="presentation"><title>subscribe to arXiv mailings</title><desc>Click here to subscribe</desc><path d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"></path></svg>
+        <a href="https://arxiv.org/help/subscribe"> Subscribe</a>
+      </li>
+      <li>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" class="icon filter-black" role="presentation"><title>Report an issue</title><desc>Click here to report an issue with arXiv's documentation in github</desc><path d="M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32V64 368 480c0 17.7 14.3 32 32 32s32-14.3 32-32V352l64.3-16.1c41.1-10.3 84.6-5.5 122.5 13.4c44.2 22.1 95.5 24.8 141.7 7.4l34.7-13c12.5-4.7 20.8-16.6 20.8-30V66.1c0-23-24.2-38-44.8-27.7l-9.6 4.8c-46.3 23.2-100.8 23.2-147.1 0c-35.1-17.6-75.4-22-113.5-12.5L64 48V32z"></path></svg>
+        <a href="https://github.com/arXiv/arxiv-docs/issues">Report a documentation issue</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="column sorry-app-links">
+    <ul>
+      <li><a href="https://arxiv.org/help/web_accessibility">Web Accessibility Assistance</a></li>
+      <li>
+        <p class="help">
+          <a class="a11y-main-link" href="https://status.arxiv.org/" target="_blank">arXiv Operational Status <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512" width="8" class="icon filter-dark_grey" role="presentation"><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"></path></svg></a><br>
+          Get status notifications via
+          <a class="is-link" href="https://subscribe.sorryapp.com/24846f03/email/new" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" class="icon filter-black" role="presentation"><path d="M502.3 190.8c3.9-3.1 9.7-.2 9.7 4.7V400c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V195.6c0-5 5.7-7.8 9.7-4.7 22.4 17.4 52.1 39.5 154.1 113.6 21.1 15.4 56.7 47.8 92.2 47.6 35.7.3 72-32.8 92.3-47.6 102-74.1 131.6-96.3 154-113.7zM256 320c23.2.4 56.6-29.2 73.4-41.4 132.7-96.3 142.8-104.7 173.4-128.7 5.8-4.5 9.2-11.5 9.2-18.9v-19c0-26.5-21.5-48-48-48H48C21.5 64 0 85.5 0 112v19c0 7.4 3.4 14.3 9.2 18.9 30.6 23.9 40.7 32.4 173.4 128.7 16.8 12.2 50.2 41.8 73.4 41.4z"></path></svg>email</a>
+          or <a class="is-link" href="https://subscribe.sorryapp.com/24846f03/slack/new" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="12" class="icon filter-black" role="presentation"><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1c0-25.9 21.16-47.06 47.06-47.06h47.06v47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V315.1zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06H164.9zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06H164.9zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06h-47.06V196.9zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06V196.9zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06v-47.06h47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06 0-25.9 21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06H283.1z"></path></svg>slack</a>
+        </p>
+      </li>
+    </ul>
+  </div>
+</div>
+<script>
+  for (var link of document.getElementsByClassName("md-nav__link")) {
+    link.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.target.click();
+        e.target.setAttribute('aria-hidden', e.target.getAttribute('aria-hidden') === 'true' ? 'false' : 'true');
+        e.target.setAttribute('aria-expanded', e.target.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+      }
+    });
+  }
+</script>
+
+<script>
+    var search = document.getElementsByClassName('md-search__input')[0];
+    var searchResults = document.getElementsByClassName('md-search-result__list')[0];
+    searchResults.setAttribute('role', 'presentation');
+    search.addEventListener('focus', (e) => {
+        document.getElementsByClassName('md-search-result__list')[0]
+            .setAttribute('role', 'list');
+    });
+
+    search.addEventListener('focusout', (e) => {
+        document.getElementsByClassName('md-search-result__list')[0]
+            .setAttribute('role', 'presentation');
+    });
+</script>
+
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.tooltips - navigation.path - navigation.indexes"], "search": "../../assets/javascripts/workers/search.5bf1dace.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="./arXiv API User&#39;s Manual - arXiv info_files/bundle.078830c0.min.js"></script>
+      
+    
+  
+</body></html>
