@@ -36,8 +36,8 @@ LOG_DIR="/tmp/skyrl-logs/$RUN_NAME"
 #-----------------------
 # Training setup
 #-----------------------
-MINI_BATCH_SIZE=8
-MAX_MODEL_LEN=65536
+MINI_BATCH_SIZE=2
+MAX_MODEL_LEN=32768
 APPLY_OVERLONG_FILTERING=true
 
 # Dr. GRPO parameters
@@ -46,29 +46,27 @@ GRPO_NORM_BY_STD=false
 USE_KL_LOSS=false
 
 # Reward type: "dummy" for pipeline testing, "format" for structure-based rewards
-REWARD_TYPE="format"
+REWARD_TYPE="dummy"
 
-# Chat template for Qwen3 with thinking tokens
-CHAT_TEMPLATE_PATH="$(dirname "$0")/../../../skyrl/train/utils/templates/qwen3_acc_thinking.jinja2"
 
 #----------------
 # Infrastructure setup
-# 2 nodes x 4 H100s each
+# 1 node x 2 H100 GPUs
 #----------------
-NUM_GPUS_PER_NODE=4
-NUM_NODES=2
-TENSOR_PARALLEL_SIZE=2
-NUM_ENGINES=4  # NUM_GPUS_PER_NODE * NUM_NODES / TENSOR_PARALLEL_SIZE
+NUM_GPUS_PER_NODE=2
+NUM_NODES=1
+TENSOR_PARALLEL_SIZE=1
+NUM_ENGINES=2  # NUM_GPUS_PER_NODE * NUM_NODES / TENSOR_PARALLEL_SIZE
 
 ENABLE_RATE_LIMITING=true
-TRAJECTORIES_PER_SECOND=2     # Slower — paper reviewing + lit search takes time
-MAX_CONCURRENCY=128            # Fewer concurrent trials
+TRAJECTORIES_PER_SECOND=2
+MAX_CONCURRENCY=32
 
 # Run SkyRL command
 uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.harbor.entrypoints.main_paper_reviewer \
   data.train_data=$TRAIN_DATA \
-  trainer.policy.model.path=Qwen/Qwen3-32B \
-  generator.inference_engine.served_model_name=Qwen3-32B \
+  trainer.policy.model.path=Qwen/Qwen3-4B-Thinking-2507 \
+  generator.inference_engine.served_model_name=Qwen3-4B-Thinking-2507 \
   harbor_trial_config.trials_dir=$TRIALS_DIR \
   trainer.export_path=$EXPORTS_DIR \
   trainer.ckpt_path=$CKPTS_DIR \
@@ -80,18 +78,15 @@ uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.har
   trainer.placement.colocate_all=true \
   trainer.strategy=fsdp2 \
   trainer.placement.policy_num_nodes=$NUM_NODES \
-  trainer.placement.ref_num_nodes=$NUM_NODES \
   trainer.placement.policy_num_gpus_per_node=$NUM_GPUS_PER_NODE \
-  trainer.placement.ref_num_gpus_per_node=$NUM_GPUS_PER_NODE \
   generator.inference_engine.num_engines=$NUM_ENGINES \
   generator.inference_engine.tensor_parallel_size=$TENSOR_PARALLEL_SIZE \
-  generator.inference_engine.engine_init_kwargs.chat_template=$CHAT_TEMPLATE_PATH \
   generator.inference_engine.engine_init_kwargs.max_model_len=$MAX_MODEL_LEN \
   generator.inference_engine.engine_init_kwargs.enable_log_requests=false \
-  trainer.epochs=3 \
-  trainer.eval_batch_size=32 \
+  trainer.epochs=1 \
+  trainer.eval_batch_size=2 \
   trainer.eval_before_train=false \
-  trainer.eval_interval=20 \
+  trainer.eval_interval=10 \
   trainer.update_epochs_per_batch=1 \
   trainer.train_batch_size=$MINI_BATCH_SIZE \
   trainer.policy_mini_batch_size=$MINI_BATCH_SIZE \
@@ -101,11 +96,11 @@ uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.har
   trainer.hf_save_interval=5 \
   trainer.algorithm.max_seq_len=$MAX_MODEL_LEN \
   trainer.policy.optimizer_config.lr=1.0e-6 \
-  generator.n_samples_per_prompt=8 \
-  generator.eval_n_samples_per_prompt=4 \
+  generator.n_samples_per_prompt=2 \
+  generator.eval_n_samples_per_prompt=1 \
   generator.apply_overlong_filtering=$APPLY_OVERLONG_FILTERING \
   generator.inference_engine.gpu_memory_utilization=0.85 \
-  trainer.logger=wandb \
+  trainer.logger=console \
   trainer.project_name=paper_reviewer \
   trainer.run_name=$RUN_NAME \
   trainer.resume_mode=latest \

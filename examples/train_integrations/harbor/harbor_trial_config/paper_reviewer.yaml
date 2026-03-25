@@ -53,8 +53,8 @@ agent:
     # Model info for token budgeting
     # NOTE: max_input_tokens should match generator.inference_engine.engine_init_kwargs.max_model_len
     model_info:
-      max_input_tokens: 65536
-      max_output_tokens: 32768
+      max_input_tokens: 32768
+      max_output_tokens: 16384
       # Set costs to 0 for local training
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0

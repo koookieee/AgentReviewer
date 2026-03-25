@@ -131,3 +131,6 @@ tx/tinker/alembic/__pycache__/
 *.db-journal
 *.db-wal
 *.db-shm
+
+# ArXiv open API (separate repo)
+open_arxiv_api/
