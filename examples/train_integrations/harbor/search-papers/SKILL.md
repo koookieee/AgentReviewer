@@ -1,176 +1,66 @@
----
-name: search-papers
-description: Search for academic papers using Semantic Scholar, OpenReview, OpenAlex, and CrossRef. Use when you need to find related work, check novelty, gather citations, download/read full papers, or get BibTeX.
-argument-hint: "[query or topic]"
----
+# search-papers
 
-# Academic Paper Search
+Search academic literature across multiple providers: Semantic Scholar, OpenAlex, arXiv, OpenReview, and CrossRef.
 
-Search query: $ARGUMENTS
+## When to use
 
-Four APIs, each with a clear role:
+Use this skill whenever you need to:
+- Find related work for a research paper
+- Verify novelty claims against existing literature
+- Check if baselines are actually SOTA
+- Look up paper metadata (citations, authors, venues)
+- Download PDFs for deeper reading
+- Get BibTeX entries
 
-| API | Role | Auth |
-|-----|------|------|
-| **Semantic Scholar (S2)** | Search, citation graph, sort by impact | `$S2_API_KEY` header (optional but recommended) |
-| **OpenAlex** | Expanded search, OA PDF links, metadata | `$OPENALEX_API_KEY` query param (free, $1/day budget) |
-| **OpenReview** | Peer reviews, BibTeX for ML venues | None needed for public data |
-| **CrossRef** | BibTeX for any paper by DOI | None (use `mailto` for polite pool) |
+## How to use
 
-**Important:** Source `.env` before API calls:
+Run `curl` commands from the terminal to query academic APIs. See `reference.md` in this directory for the full API reference with examples.
+
+### Quick examples
+
+**Search by keyword (Semantic Scholar):**
 ```bash
-set -a; source .env; set +a  # loads S2_API_KEY, OPENALEX_API_KEY
+curl -s -H "x-api-key: $S2_API_KEY" \
+  "https://api.semanticscholar.org/graph/v1/paper/search?query=your+search+terms&limit=10&fields=title,authors,year,abstract,citationCount,externalIds"
 ```
 
-For detailed API reference with all endpoints and parameters, see [reference.md](reference.md).
+**Search by keyword (OpenAlex):**
+```bash
+curl -s "https://api.openalex.org/works?search=your+search+terms&sort=cited_by_count:desc&per-page=10&select=id,title,publication_year,cited_by_count,doi&api_key=$OPENALEX_API_KEY"
+```
 
----
+**Look up a paper by arXiv ID:**
+```bash
+curl -s -H "x-api-key: $S2_API_KEY" \
+  "https://api.semanticscholar.org/graph/v1/paper/ArXiv:2301.00001?fields=title,abstract,authors,citationCount,externalIds"
+```
 
-## Decision Guide: Which API When?
-
-| I want to... | Use |
-|--------------|-----|
-| Find papers on a topic | S2 keyword search (`/paper/search`) or OpenAlex (`/works?search=...`) |
-| Find most-cited papers | S2 bulk search (`/paper/search/bulk?sort=citationCount:desc`) |
-| Look up a specific paper | S2 paper lookup (by ArXiv ID, DOI, or S2 ID) |
-| Find exact title match | S2 title match (`/paper/search/match`) |
-| Get citation graph | S2 citations + references endpoints |
-| Resolve multiple papers at once | S2 batch POST (up to 500 IDs) |
-| **Read full text of a paper** | **See "Reading Full Papers" below** |
-| Read peer reviews + scores | OpenReview (`/notes?forum=<id>`) |
-| Browse a venue's papers | OpenReview (`/notes?content.venueid=...`) |
-| Get BibTeX | S2 `citationStyles` field (fastest), or CrossRef via `dx.doi.org` (most reliable) |
-
----
-
-## Reading Full Papers
-
-**You must read the full text of the 3-5 most important papers.** Abstracts alone are not sufficient for understanding methodology, experimental details, or making accurate comparisons.
-
-**Always download papers to `literature/`** and record notes in `literature/README.md`:
-
+**Download an arXiv PDF:**
 ```bash
 mkdir -p literature
+curl -s -L -o literature/paper.pdf "https://arxiv.org/pdf/2301.00001"
 ```
 
-Use this priority chain:
-
-### Priority 1: Paper has an arXiv ID → ar5iv HTML (best quality, most reliable)
-
-Most ML/AI papers are on arXiv. Check the `externalIds.ArXiv` field from S2 results.
-
-**Use `WebFetch` on the ar5iv HTML version** — this preserves tables, math, and structure far better than PDF-to-text extraction:
-```
-WebFetch(url="https://ar5iv.labs.arxiv.org/html/1706.03762", prompt="Extract the full methodology, experimental setup, and key results")
-```
-
-ar5iv converts arXiv LaTeX sources to HTML. The content is structured, tables are preserved, and `WebFetch` can summarize exactly what you need in a single call. You can make multiple `WebFetch` calls with different prompts to extract different sections.
-
-**Also download the PDF** to `literature/` for figures and as a local backup:
+**Get BibTeX for a DOI:**
 ```bash
-curl -s -L -o literature/1706.03762.pdf "https://arxiv.org/pdf/1706.03762"
+curl -s -L -H "Accept: application/x-bibtex" "https://dx.doi.org/10.48550/arXiv.2301.00001"
 ```
 
-You can read the PDF with the `Read` tool (`pages` parameter, max 20 pages per call) if you need to inspect figures or verify details. **Rate limit:** Wait 3 seconds between consecutive arXiv downloads.
+## Available providers
 
-**Fallback — if ar5iv is unavailable for a paper**, read the downloaded PDF directly:
-```
-Read(file_path="literature/1706.03762.pdf", pages="1-15")
-```
+| Provider | Best for | Auth |
+|----------|----------|------|
+| Semantic Scholar | Keyword search, citations graph, paper lookup | `$S2_API_KEY` header |
+| OpenAlex | OA PDF links, citation counts, filtering | `$OPENALEX_API_KEY` param |
+| arXiv | Direct PDF download, HTML reading | None |
+| OpenReview | ICLR/NeurIPS/ICML papers, reviews, decisions | None |
+| CrossRef | BibTeX from any DOI | None |
 
-### Priority 2: Paper has no arXiv ID → OpenAlex OA links (free)
+## Rate limits
 
-Query OpenAlex for the paper's open access PDF URL:
+- **Semantic Scholar:** 1 req/s with API key. Back off on 429.
+- **OpenAlex:** 100 req/s. Daily budget $1 (search costs $0.001 each).
+- **arXiv:** Wait 3s between downloads. No bulk scraping.
+- **OpenReview:** ~5 concurrent requests OK.
 
-```bash
-# Look up by DOI
-curl -s "https://api.openalex.org/works/https://doi.org/10.1234/example?api_key=$OPENALEX_API_KEY&select=id,title,best_oa_location,open_access"
-```
-
-The response includes `best_oa_location.pdf_url` — a direct link to the PDF hosted by the publisher, PMC, or a repository. Download it:
-
-```bash
-curl -s -L -o literature/paper_name.pdf "$PDF_URL"
-```
-
-Then read with the `Read` tool as above.
-
-### Priority 3: No OA PDF available → WebFetch the publisher page
-
-Use `WebFetch` to read the paper directly from the publisher's website:
-
-```
-WebFetch(url="https://doi.org/10.1234/example", prompt="Extract the full methodology, experimental setup, and key results")
-```
-
-Many publisher pages include the full text in HTML even when the PDF is paywalled. If the publisher page doesn't have full text, try searching for the paper title + "pdf" to find alternative sources.
-
-### After reading each paper
-
-Update `literature/README.md` with the paper's filename, title, and key takeaways. This serves as a persistent index so you (and future sessions) can quickly see what's been read and what was learned.
-
----
-
-## Quick Start: Common Workflows
-
-### Literature search (find related work)
-
-```bash
-# 1. Relevance-ranked search (S2)
-curl -s -H "x-api-key: $S2_API_KEY" \
-  "https://api.semanticscholar.org/graph/v1/paper/search?query=YOUR+TOPIC&limit=10&fields=title,year,citationCount,abstract,externalIds,citationStyles"
-
-# 2. Most-cited papers on the topic (S2)
-curl -s -H "x-api-key: $S2_API_KEY" \
-  "https://api.semanticscholar.org/graph/v1/paper/search/bulk?query=YOUR+TOPIC&sort=citationCount:desc&fields=title,year,citationCount&limit=10"
-
-# 3. Search with OpenAlex (broader coverage, includes OA links)
-curl -s "https://api.openalex.org/works?search=YOUR+TOPIC&filter=publication_year:>2020&sort=cited_by_count:desc&per-page=10&select=id,title,publication_year,cited_by_count,doi,open_access,best_oa_location&api_key=$OPENALEX_API_KEY"
-```
-
-### Get BibTeX for a paper
-
-```bash
-# Option A: From S2 (include citationStyles field — has bibtex key)
-curl -s -H "x-api-key: $S2_API_KEY" \
-  "https://api.semanticscholar.org/graph/v1/paper/ArXiv:1706.03762?fields=title,citationStyles"
-
-# Option B: From CrossRef via DOI (works for ALL DOI types)
-curl -s -L -H "Accept: application/x-bibtex" "https://dx.doi.org/$DOI"
-```
-
-### Deep dive on a paper's review on openreview 
-
-```bash
-# Search OpenReview for the paper
-curl -s "https://api2.openreview.net/notes/search?term=PAPER+TITLE&source=forum&limit=1"
-
-# Get reviews (use forum ID from above)
-curl -s "https://api2.openreview.net/notes?forum=$FORUM_ID&limit=50"
-
-# Read full text — use arXiv if available (see "Reading Full Papers" above)
-```
-
----
-
-## Search Tips
-
-- **Use keyword phrases, not sentences** — S2 natural language queries return 0 results
-- **Start broad, then narrow**: "regularization" → "L2 regularization neural networks"
-- **Filter by year** for recent work: `&year=2023-` (S2) or `&filter=publication_year:>2022` (OpenAlex)
-- **Use minCitationCount** to skip low-impact: `&minCitationCount=50` (S2) or `&filter=cited_by_count:>50` (OpenAlex)
-- **Multiple searches**: 3-5 queries with different angles for coverage
-- **Read full text**: After identifying key papers, always download and read them — see "Reading Full Papers"
-
-## Rate limit
-
-- **S2 abstracts** may contain control chars (ESC/0x1b). Strip with: `re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', text)`
-- **S2 openAccessPdf** is often empty — use arXiv direct download or OpenAlex `best_oa_location` instead
-- **S2 `/paper/search`** does NOT support sort — use `/paper/search/bulk` instead
-- **S2 `/paper/{id}/citations`** does NOT support sort — newest first only
-- **CrossRef `/transform`** fails for arXiv DOIs — always use `dx.doi.org`
-- **CrossRef references** unreliable — use S2 for reference lists
-- **OpenReview V2** wraps values: `content.title.value`, not `content.title`
-- **OpenReview venue IDs** have no trailing slash: `ICLR.cc/2024/Conference`
-- **arXiv rate limit** — wait 3 seconds between consecutive downloads
-- **OpenAlex budget** — $1/day free tier; list queries cost $0.0001, search costs $0.001; singleton lookups are free
+See `reference.md` for complete API documentation with all endpoints, parameters, and response formats.

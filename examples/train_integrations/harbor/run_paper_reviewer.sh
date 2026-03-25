@@ -18,7 +18,9 @@ set -ex
 # Prepare dataset first (downloads from arXiv and creates task directories):
 # uv run examples/train_integrations/harbor/prepare_paper_reviewer_dataset.py \
 #     --categories cs.CL,cs.CV,cs.LG --num-papers 300 --year-range 2023-2025
-DATA_DIR="$HOME/data/harbor"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+DATA_DIR="$REPO_ROOT/data/harbor"
 TRAIN_DATA="['$DATA_DIR/PaperReviews']"
 EVAL_DATA=""
 
