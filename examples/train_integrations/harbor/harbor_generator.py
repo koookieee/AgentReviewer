@@ -1,4 +1,5 @@
 import asyncio
+import os
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import List, Optional
@@ -75,7 +76,14 @@ class HarborGenerator(GeneratorInterface):
         self._harbor_trial_config_template.setdefault("agent", {})[
             "model_name"
         ] = f"hosted_vllm/{ie_cfg.served_model_name}"
-        self._harbor_trial_config_template["agent"].setdefault("kwargs", {})["api_base"] = f"{self.base_url}/v1"
+        # Use ngrok URL if available (for Daytona Cloud sandboxes to reach vLLM on SLURM nodes)
+        ngrok_url = os.environ.get("NGROK_VLLM_URL")
+        if ngrok_url:
+            api_base = f"{ngrok_url}/v1"
+            logger.info(f"Using ngrok URL for agent api_base: {api_base}")
+        else:
+            api_base = f"{self.base_url}/v1"
+        self._harbor_trial_config_template["agent"].setdefault("kwargs", {})["api_base"] = api_base
 
         logger.info(
             f"HarborGenerator initialized with Harbor config. "

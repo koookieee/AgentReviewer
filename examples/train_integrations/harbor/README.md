@@ -39,3 +39,22 @@ uv run examples/train_integrations/harbor/prepare_harbor_dataset.py \
 # 3. Launch training
 bash examples/train_integrations/harbor/run_codecontest.sh
 ```
+
+### Paper Reviewer Training (SLURM)
+
+Train an agentic paper reviewer with Claude Code + SkyRL + Harbor on a SLURM cluster (e.g. Purdue Anvil).
+
+```bash
+# 1. Prepare dataset (duplicate a single paper for testing)
+# Task dirs go in data/harbor/PaperReviews/ — each needs instruction.md, task.toml, environment/Dockerfile, latex/
+
+# 2. Submit SLURM job (starts ngrok tunnel + LiteLLM proxy + SkyRL training)
+sbatch examples/train_integrations/harbor/slurm_paper_reviewer.sh
+```
+
+Key files:
+- `run_paper_reviewer.sh` — training config (model, batch size, reward type)
+- `slurm_paper_reviewer.sh` — SLURM config, ngrok tunnel, Daytona credentials
+- `harbor_trial_config/paper_reviewer.yaml` — Harbor agent/sandbox config
+- `paper_reviewer_generator.py` — custom reward from review output (no verifier)
+- `paper_reviewer_instruction_template.md` — review prompt template

@@ -3,6 +3,7 @@ __pycache__/
 **/*.egg-info/
 # hydra logs
 /outputs/
+MEMORY.md
 /data/lcb
 
 # MkDocs build output (generated during build)

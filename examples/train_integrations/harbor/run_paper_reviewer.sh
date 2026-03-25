@@ -1,16 +1,10 @@
 set -ex
 
-# wandb api key.
-# export WANDB_API_KEY=YOUR_KEY_HERE
-
-# Search-papers skill API keys (required for literature search).
-# export S2_API_KEY=YOUR_KEY_HERE
-# export OPENALEX_API_KEY=YOUR_KEY_HERE
-
-# Pick the sandbox provider and provide the credentials.
-# export DAYTONA_API_KEY=YOUR_KEY_HERE
-# export MODAL_TOKEN_ID=YOUR_KEY_HERE
-# export MODAL_TOKEN_SECRET=YOUR_KEY_HERE
+# Start LiteLLM proxy: translates Anthropic Messages API → OpenAI format for vLLM
+# Claude Code speaks Anthropic format, vLLM speaks OpenAI format
+litellm --model openai/Qwen3-4B-Thinking-2507 --api_base http://localhost:8000/v1 --port 4000 --drop_params &
+LITELLM_PID=$!
+echo "LiteLLM proxy started on port 4000 (PID: $LITELLM_PID)"
 
 #-----------------------
 # Dataset setup
@@ -60,7 +54,7 @@ NUM_ENGINES=2  # NUM_GPUS_PER_NODE * NUM_NODES / TENSOR_PARALLEL_SIZE
 
 ENABLE_RATE_LIMITING=true
 TRAJECTORIES_PER_SECOND=2
-MAX_CONCURRENCY=32
+MAX_CONCURRENCY=2
 
 # Run SkyRL command
 uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.harbor.entrypoints.main_paper_reviewer \

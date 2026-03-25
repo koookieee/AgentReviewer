@@ -17,13 +17,36 @@ mkdir -p /anvil/scratch/x-spei/logs
 
 PROJECT_DIR=/anvil/projects/x-nairr250100/AgentReviewer
 SIF=/anvil/projects/x-nairr250100/skyrl.sif
+NGROK=${PROJECT_DIR}/ngrok
+
+# Start ngrok tunnel for LiteLLM proxy (port 4000, which translates Anthropic→OpenAI for vLLM on 8000)
+${NGROK} http 4000 --log=stdout --log-level=info > /anvil/scratch/x-spei/logs/ngrok_${SLURM_JOB_ID}.log 2>&1 &
+NGROK_PID=$!
+sleep 5
+
+# Extract the public URL from ngrok API
+NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | python3 -c "import sys,json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])")
+echo "ngrok URL: ${NGROK_URL}"
+
+# Export for the training script
+export NGROK_VLLM_URL=${NGROK_URL}
 
 apptainer exec --nv \
     --bind ${PROJECT_DIR}:${PROJECT_DIR} \
     --bind /anvil/scratch/x-spei:/anvil/scratch/x-spei \
+    --bind /home/x-spei/.config/ngrok:/home/x-spei/.config/ngrok \
     --env PATH="${PROJECT_DIR}/.venv/bin:/home/ray/anaconda3/bin:$PATH" \
     --env HF_HOME=/anvil/scratch/x-spei/hf_cache \
     --env PYTHONPATH=${PROJECT_DIR} \
+    --env NGROK_VLLM_URL=${NGROK_URL} \
+    --env ANTHROPIC_BASE_URL=${NGROK_URL} \
+    --env ANTHROPIC_API_KEY=dummy \
+    --env CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1 \
+    --env DAYTONA_API_KEY=dtn_97d3466f70f1629c2eeffd3fb3964a2d754edf53a6f95686ba00c669273c0c33 \
+    --env DAYTONA_API_URL=https://app.daytona.io/api \
     --pwd ${PROJECT_DIR} \
     ${SIF} \
     bash -c "source .venv/bin/activate && bash examples/train_integrations/harbor/run_paper_reviewer.sh"
+
+# Cleanup ngrok
+kill ${NGROK_PID} 2>/dev/null
