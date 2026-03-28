@@ -1,8 +1,9 @@
 set -ex
 
 # Start LiteLLM proxy: translates Anthropic Messages API → OpenAI format for vLLM
-# Claude Code speaks Anthropic format, vLLM speaks OpenAI format
-litellm --model openai/Qwen3-4B-Thinking-2507 --api_base http://localhost:8000/v1 --port 4000 --drop_params &
+# Model name must include full HF path to match what vLLM serves
+export OPENAI_API_KEY=dummy
+litellm --model openai/Qwen/Qwen3-4B-Thinking-2507 --api_base http://localhost:8000/v1 --port 4000 --drop_params &
 LITELLM_PID=$!
 echo "LiteLLM proxy started on port 4000 (PID: $LITELLM_PID)"
 
@@ -56,8 +57,8 @@ ENABLE_RATE_LIMITING=true
 TRAJECTORIES_PER_SECOND=2
 MAX_CONCURRENCY=2
 
-# Run SkyRL command
-uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.harbor.entrypoints.main_paper_reviewer \
+# Run SkyRL command (using .venv directly to avoid uv creating temp envs that exhaust inode quota)
+python -m examples.train_integrations.harbor.entrypoints.main_paper_reviewer \
   data.train_data=$TRAIN_DATA \
   trainer.policy.model.path=Qwen/Qwen3-4B-Thinking-2507 \
   generator.inference_engine.served_model_name=Qwen3-4B-Thinking-2507 \
