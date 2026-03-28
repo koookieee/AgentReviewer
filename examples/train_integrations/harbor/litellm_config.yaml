@@ -1,0 +1,17 @@
+model_list:
+  - model_name: "Qwen3-4B-Thinking-2507"
+    litellm_params:
+      model: "hosted_vllm/Qwen3-4B-Thinking-2507"
+      api_key: "dummy"
+    model_info:
+      supports_function_calling: true
+  - model_name: "hosted_vllm/Qwen3-4B-Thinking-2507"
+    litellm_params:
+      model: "hosted_vllm/Qwen3-4B-Thinking-2507"
+      api_key: "dummy"
+    model_info:
+      supports_function_calling: true
+
+litellm_settings:
+  drop_params: false
+  modify_params: true

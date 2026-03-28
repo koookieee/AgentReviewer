@@ -6,8 +6,12 @@ The base HarborGenerator treats this as a failure and retries. This subclass
 instead computes rewards from the review output itself.
 """
 
+import json
+import os
 import re
+import tempfile
 from copy import deepcopy
+from pathlib import Path
 from loguru import logger
 from uuid import uuid4
 
@@ -18,6 +22,66 @@ from harbor.trial.trial import Trial
 from harbor.models.trial.config import TrialConfig
 
 from .harbor_generator import HarborGenerator, HarborAgentOutput, MAX_NUM_RETRIES_PER_TRIAL
+
+
+# Directories to skip when uploading task content to E2B sandbox
+_TASK_SKIP_DIRS = {"environment", ".git", "__pycache__"}
+
+
+class PaperReviewerTrial(Trial):
+    """Trial subclass that uploads task content files to E2B sandboxes.
+
+    Harbor's E2B environment doesn't include task content (latex/, etc.) in the
+    sandbox because `Template.from_dockerfile` has no build context. Docker
+    environments get them via bind-mount. This subclass uploads the task content
+    directory after environment setup so the agent can actually read the paper.
+    """
+
+    async def _setup_environment(self) -> None:
+        await super()._setup_environment()
+        # Upload task content (everything except environment/) to the sandbox workdir
+        task_dir = Path(self.config.task.path)
+        if not task_dir.is_dir():
+            logger.warning(f"Task dir {task_dir} not found, skipping file upload")
+            return
+        workdir = self._environment._workdir or "/"
+        for item in sorted(task_dir.iterdir()):
+            if item.name in _TASK_SKIP_DIRS:
+                continue
+            target = f"/{workdir.strip('/')}/{item.name}"
+            try:
+                if item.is_file():
+                    await self._environment.upload_file(item, target)
+                elif item.is_dir():
+                    await self._environment.upload_dir(item, target)
+            except Exception as e:
+                logger.warning(f"Failed to upload {item.name} to {target}: {e}")
+        logger.info(f"Uploaded task content from {task_dir} to {workdir}")
+
+        # Upload search-papers-skill.md from the harbor examples dir
+        skill_file = Path(__file__).parent / "search-papers" / "SKILL.md"
+        if skill_file.is_file():
+            target = f"/{workdir.strip('/')}/search-papers-skill.md"
+            try:
+                await self._environment.upload_file(skill_file, target)
+                logger.info(f"Uploaded search skill to {target}")
+            except Exception as e:
+                logger.warning(f"Failed to upload search skill: {e}")
+
+        # Write search API URL so the agent can discover it
+        search_api_url = os.environ.get("SEARCH_API_URL", "")
+        if search_api_url:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+                f.write(search_api_url)
+                tmp_path = f.name
+            target = f"/{workdir.strip('/')}/search_api_url.txt"
+            try:
+                await self._environment.upload_file(Path(tmp_path), target)
+                logger.info(f"Uploaded search API URL ({search_api_url}) to {target}")
+            except Exception as e:
+                logger.warning(f"Failed to upload search API URL: {e}")
+            finally:
+                os.unlink(tmp_path)
 
 
 # Required sections in the review output (from idea-reviewer.md output format)
@@ -100,6 +164,87 @@ REWARD_FUNCTIONS = {
 }
 
 
+def _extract_chat_history_from_trial(trial: Trial) -> tuple[list[dict] | None, int, int]:
+    """Extract chat history from Claude Code's session JSONL when metadata is unavailable.
+
+    Harbor's Claude Code agent writes session JSONL files but does not populate
+    context.metadata["all_messages"] (unlike terminus-2). This function reads
+    the JSONL directly and reconstructs a chat history compatible with the
+    training pipeline.
+
+    Returns:
+        (chat_history, num_turns, summarization_count) or (None, 0, 0) on failure.
+    """
+    agent_dir = trial._trial_paths.agent_dir
+    projects_dir = agent_dir / "sessions" / "projects"
+    if not projects_dir.is_dir():
+        return None, 0, 0
+
+    # Find JSONL files across all project dirs
+    jsonl_files = list(projects_dir.rglob("*.jsonl"))
+    if not jsonl_files:
+        return None, 0, 0
+
+    # Use the largest JSONL (most content)
+    jsonl_path = max(jsonl_files, key=lambda p: p.stat().st_size)
+
+    messages: list[dict] = []
+    num_turns = 0
+    try:
+        for line in jsonl_path.read_text().splitlines():
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            event_type = event.get("type")
+
+            if event_type == "user":
+                msg = event.get("message", {})
+                content = msg.get("content", "")
+                if content:
+                    messages.append({"role": "user", "content": content})
+
+            elif event_type == "assistant":
+                msg = event.get("message", {})
+                content_blocks = msg.get("content", [])
+                # Reconstruct assistant message text
+                text_parts = []
+                for block in content_blocks:
+                    if isinstance(block, dict):
+                        if block.get("type") == "text" and block.get("text"):
+                            text_parts.append(block["text"])
+                        elif block.get("type") == "tool_use":
+                            text_parts.append(
+                                f"[Tool use: {block.get('name', '')}({json.dumps(block.get('input', {}))})]"
+                            )
+                combined = "\n".join(text_parts)
+                if combined:
+                    # Wrap content with think tags if missing so the chat template
+                    # tokenizes correctly (avoids generation prompt assertion error).
+                    if "<think>" not in combined:
+                        combined = f"<think>\n...\n</think>\n\n{combined}"
+                    messages.append({"role": "assistant", "content": combined})
+                    num_turns += 1
+
+            elif event_type == "tool_result":
+                # Tool results appear as user messages in the training format
+                content = event.get("content", "")
+                if isinstance(content, list):
+                    content = "\n".join(
+                        b.get("text", "") for b in content if isinstance(b, dict)
+                    )
+                if content:
+                    messages.append({"role": "user", "content": str(content)})
+
+    except Exception as e:
+        logger.warning(f"Failed to parse session JSONL {jsonl_path}: {e}")
+        return None, 0, 0
+
+    if len(messages) <= 1:
+        return None, 0, 0
+
+    return messages, num_turns, 0
+
+
 class PaperReviewerGenerator(HarborGenerator):
     """HarborGenerator subclass that computes rewards from review output when no verifier is available."""
 
@@ -153,7 +298,7 @@ class PaperReviewerGenerator(HarborGenerator):
                 config["task"] = {"path": prompt}
                 config["agent"]["kwargs"]["session_id"] = uuid4().hex
                 trial_config = TrialConfig.model_validate(config)
-                trial = Trial(trial_config)
+                trial = PaperReviewerTrial(trial_config)
 
                 async with self._rate_limiter:
                     results = await trial.run()
@@ -175,13 +320,14 @@ class PaperReviewerGenerator(HarborGenerator):
                     reward = 0
 
                 # --- Extract chat history (before reward determination) ---
-                if not results.agent_result or not results.agent_result.metadata:
-                    logger.warning(f"{prefix} failed: No agent_result metadata. Results: {results}")
-                    continue
-
-                chat_history = results.agent_result.metadata.get("all_messages")
-                summarization_count = results.agent_result.metadata.get("summarization_count", 0)
-                num_turns = results.agent_result.metadata.get("n_episodes", 0)
+                if results.agent_result and results.agent_result.metadata:
+                    # terminus-2 style: metadata populated directly
+                    chat_history = results.agent_result.metadata.get("all_messages")
+                    summarization_count = results.agent_result.metadata.get("summarization_count", 0)
+                    num_turns = results.agent_result.metadata.get("n_episodes", 0)
+                else:
+                    # Claude Code style: read from session JSONL
+                    chat_history, num_turns, summarization_count = _extract_chat_history_from_trial(trial)
 
                 if not chat_history or len(chat_history) <= 1 or chat_history[0]["role"] != "user":
                     logger.warning(
