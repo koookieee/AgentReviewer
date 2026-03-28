@@ -13,7 +13,9 @@ source .venv/bin/activate
 MODEL="Qwen/Qwen3-4B-Thinking-2507"
 MODEL_SHORT="Qwen3-4B-Thinking-2507"
 NUM_GPUS=2
-REWARD_TYPE="dummy"
+# Reward type: "dummy" for pipeline testing, "format" for structure-based rewards,
+#              "llm_judge" for Gemini-based quality assessment (requires GEMINI_API_KEY)
+REWARD_TYPE="llm_judge"
 E2B_API_KEY="${E2B_API_KEY:?Set E2B_API_KEY}"
 NGROK_AUTHTOKEN="${NGROK_AUTHTOKEN:?Set NGROK_AUTHTOKEN}"
 DATA_DIR="$REPO_ROOT/data/harbor/PaperReviews"

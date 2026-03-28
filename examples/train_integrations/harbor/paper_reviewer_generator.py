@@ -6,6 +6,7 @@ The base HarborGenerator treats this as a failure and retries. This subclass
 instead computes rewards from the review output itself.
 """
 
+import asyncio
 import json
 import os
 import re
@@ -104,7 +105,7 @@ REQUIRED_SCORES = [
 ]
 
 
-def compute_format_reward(chat_history: list[dict]) -> float:
+def compute_format_reward(chat_history: list[dict], task_path: str = "") -> float:
     """Compute a reward based on how well the review follows the expected format.
 
     Checks for:
@@ -153,7 +154,7 @@ def compute_format_reward(chat_history: list[dict]) -> float:
     return min(reward, 1.0)
 
 
-def compute_dummy_reward(chat_history: list[dict]) -> float:
+def compute_dummy_reward(chat_history: list[dict], task_path: str = "") -> float:
     """Always returns 1.0 — for pipeline testing."""
     return 1.0
 
@@ -264,10 +265,20 @@ class PaperReviewerGenerator(HarborGenerator):
             tokenizer=tokenizer,
             max_seq_len=max_seq_len,
         )
-        if reward_type not in REWARD_FUNCTIONS:
-            raise ValueError(f"Unknown reward_type '{reward_type}'. Choose from: {list(REWARD_FUNCTIONS.keys())}")
         self.reward_type = reward_type
-        self._reward_fn = REWARD_FUNCTIONS[reward_type]
+
+        if reward_type == "llm_judge":
+            from .Reward.llm_judge import LLMJudgeReward
+
+            self._reward_fn = LLMJudgeReward()
+            self._reward_is_async = True
+        elif reward_type in REWARD_FUNCTIONS:
+            self._reward_fn = REWARD_FUNCTIONS[reward_type]
+            self._reward_is_async = False
+        else:
+            valid = list(REWARD_FUNCTIONS.keys()) + ["llm_judge"]
+            raise ValueError(f"Unknown reward_type '{reward_type}'. Choose from: {valid}")
+
         logger.info(f"PaperReviewerGenerator initialized with reward_type='{reward_type}'")
 
     async def harbor_agent_loop(
@@ -344,7 +355,10 @@ class PaperReviewerGenerator(HarborGenerator):
                         reward = results.verifier_result.rewards["reward"]
                     else:
                         # No verifier — compute reward from the review output
-                        reward = self._reward_fn(chat_history)
+                        if self._reward_is_async:
+                            reward = await self._reward_fn(chat_history, prompt)
+                        else:
+                            reward = self._reward_fn(chat_history, prompt)
                         logger.debug(
                             f"{prefix} computed {self.reward_type} reward={reward:.3f} "
                             f"(no verifier result)"

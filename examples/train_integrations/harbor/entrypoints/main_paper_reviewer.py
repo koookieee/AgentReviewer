@@ -28,7 +28,7 @@ PAPER_REVIEWER_DEFAULT_CONFIG = Path(__file__).parent.parent / "harbor_trial_con
 class PaperReviewerSkyRLConfig(HarborSkyRLConfig):
     """HarborSkyRLConfig with paper reviewer reward configuration."""
 
-    reward_type: str = "format"  # "dummy" or "format"
+    reward_type: str = "format"  # "dummy", "format", or "llm_judge"
 
 
 class PaperReviewerExp(HarborExp):
