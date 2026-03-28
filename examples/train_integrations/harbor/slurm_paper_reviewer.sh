@@ -12,24 +12,19 @@
 #SBATCH --error=/anvil/scratch/x-spei/logs/paper_reviewer_%j.err
 
 set -ex
-
 mkdir -p /anvil/scratch/x-spei/logs
 
 PROJECT_DIR=/anvil/projects/x-nairr250100/AgentReviewer
 SIF=/anvil/projects/x-nairr250100/skyrl.sif
 NGROK=${PROJECT_DIR}/ngrok
+LITELLM_PORT=4000
 
-# Start ngrok tunnel for LiteLLM proxy (port 4000, which translates Anthropic→OpenAI for vLLM on 8000)
-${NGROK} http 4000 --log=stdout --log-level=info > /anvil/scratch/x-spei/logs/ngrok_${SLURM_JOB_ID}.log 2>&1 &
+# Start ngrok tunnel for LiteLLM proxy
+${NGROK} http ${LITELLM_PORT} --log=stdout --log-level=info > /anvil/scratch/x-spei/logs/ngrok_${SLURM_JOB_ID}.log 2>&1 &
 NGROK_PID=$!
 sleep 5
-
-# Extract the public URL from ngrok API
 NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | python3 -c "import sys,json; print(json.load(sys.stdin)['tunnels'][0]['public_url'])")
 echo "ngrok URL: ${NGROK_URL}"
-
-# Export for the training script
-export NGROK_VLLM_URL=${NGROK_URL}
 
 apptainer exec --nv \
     --bind ${PROJECT_DIR}:${PROJECT_DIR} \
@@ -48,5 +43,4 @@ apptainer exec --nv \
     ${SIF} \
     bash -c "source .venv/bin/activate && bash examples/train_integrations/harbor/run_paper_reviewer.sh"
 
-# Cleanup ngrok
 kill ${NGROK_PID} 2>/dev/null
