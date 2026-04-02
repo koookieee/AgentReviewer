@@ -34,7 +34,7 @@ from pathlib import Path, PurePosixPath
 from textwrap import dedent
 
 # Path to the search-papers skill files (relative to this script)
-SKILL_DIR = Path(__file__).parent / "search-papers"
+SKILL_DIR = Path(__file__).parent / "search"
 INSTRUCTION_TEMPLATE = Path(__file__).parent / "paper_reviewer_instruction_template.md"
 
 # arXiv API base URL
@@ -285,6 +285,38 @@ def create_task_directory(
         src = skill_dir / skill_file
         if src.exists():
             shutil.copy2(src, skill_dest / skill_file)
+
+    # Create task.toml (required by Harbor)
+    task_toml = dedent("""\
+        version = "1.0"
+
+        [agent]
+        timeout_sec = 2400.0
+
+        [verifier]
+        timeout_sec = 60.0
+
+        [environment]
+        cpus = 1
+        memory_mb = 2048
+        storage_mb = 2048
+        allow_internet = true
+    """)
+    (task_dir / "task.toml").write_text(task_toml)
+
+    # Create environment/Dockerfile (required by Harbor for E2B sandbox)
+    env_dir = task_dir / "environment"
+    env_dir.mkdir(parents=True, exist_ok=True)
+    dockerfile = dedent("""\
+        FROM ubuntu:22.04
+
+        RUN apt-get update && apt-get install -y --no-install-recommends \\
+            curl ca-certificates git python3 python3-pip \\
+            && rm -rf /var/lib/apt/lists/*
+
+        WORKDIR /app
+    """)
+    (env_dir / "Dockerfile").write_text(dockerfile)
 
     return True
 

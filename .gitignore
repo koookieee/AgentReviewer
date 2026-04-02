@@ -135,3 +135,4 @@ tx/tinker/alembic/__pycache__/
 
 # ArXiv open API (separate repo)
 open_arxiv_api/
+training_backup.tar.gz

@@ -2,8 +2,7 @@
 Main entrypoint for training a paper reviewer model on Harbor tasks.
 
 Extends the Harbor training entrypoint with:
-- PaperReviewerGenerator (computes rewards from review output, no verifier needed)
-- Configurable reward_type ("dummy" for testing, "format" for structure-based rewards)
+- PaperReviewerGenerator (computes rewards via LLM-as-judge)
 - paper_reviewer.yaml as default Harbor trial config
 """
 
@@ -17,8 +16,8 @@ from pathlib import Path
 from skyrl.train.utils import validate_cfg
 from skyrl.train.utils.utils import initialize_ray
 
-from .main_harbor import HarborExp, HarborSkyRLConfig, _deep_merge
-from ..paper_reviewer_generator import PaperReviewerGenerator
+from examples.train_integrations.harbor.entrypoints.main_harbor import HarborExp, HarborSkyRLConfig, _deep_merge
+from examples.train_integrations.harbor.paper_reviewer.paper_reviewer_generator import PaperReviewerGenerator
 
 
 PAPER_REVIEWER_DEFAULT_CONFIG = Path(__file__).parent.parent / "harbor_trial_config" / "paper_reviewer.yaml"
@@ -28,12 +27,12 @@ PAPER_REVIEWER_DEFAULT_CONFIG = Path(__file__).parent.parent / "harbor_trial_con
 class PaperReviewerSkyRLConfig(HarborSkyRLConfig):
     """HarborSkyRLConfig with paper reviewer reward configuration."""
 
-    reward_type: str = "format"  # "dummy" or "format"
+    reward_type: str = "llm_judge"
 
 
 class PaperReviewerExp(HarborExp):
     def get_generator(self, cfg, tokenizer, inference_engine_client):
-        """Initializes the PaperReviewerGenerator with custom reward computation."""
+        """Initializes the PaperReviewerGenerator with LLM judge reward."""
         return PaperReviewerGenerator(
             generator_cfg=cfg.generator,
             harbor_cfg=cfg.harbor_trial_config,
@@ -46,7 +45,6 @@ class PaperReviewerExp(HarborExp):
 
 @ray.remote(num_cpus=1)
 def skyrl_entrypoint(cfg):
-    # make sure that the training loop is not run on the head node.
     exp = PaperReviewerExp(cfg)
     exp.run()
 

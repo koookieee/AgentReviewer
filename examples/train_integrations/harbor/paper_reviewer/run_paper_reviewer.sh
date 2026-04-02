@@ -1,27 +1,28 @@
 set -ex
 
-# wandb api key.
-# export WANDB_API_KEY=YOUR_KEY_HERE
-
-# Pick the sandbox provider and provide the credentials.
-# export DAYTONA_API_KEY=YOUR_KEY_HERE
-# export MODAL_TOKEN_ID=YOUR_KEY_HERE
-# export MODAL_TOKEN_SECRET=YOUR_KEY_HERE
+# Start LiteLLM proxy: translates Anthropic Messages API → OpenAI format for vLLM
+# Model name must include full HF path to match what vLLM serves
+export OPENAI_API_KEY=dummy
+litellm --model openai/Qwen/Qwen3-4B-Thinking-2507 --api_base http://localhost:8000/v1 --port 4000 --drop_params &
+LITELLM_PID=$!
+echo "LiteLLM proxy started on port 4000 (PID: $LITELLM_PID)"
 
 #-----------------------
 # Dataset setup
 #-----------------------
-# Prepare datasets first (downloads from HuggingFace and extracts tasks):
-# uv run examples/train_integrations/harbor/prepare_harbor_dataset.py --dataset open-thoughts/CodeContests
-# uv run examples/train_integrations/harbor/prepare_harbor_dataset.py --dataset open-thoughts/OpenThoughts-TB-dev
-DATA_DIR="$HOME/data/harbor"
-TRAIN_DATA="['$DATA_DIR/CodeContests']"
-EVAL_DATA="['$DATA_DIR/OpenThoughts-TB-dev']"
+# Prepare dataset first (downloads from arXiv and creates task directories):
+# uv run examples/train_integrations/harbor/prepare_paper_reviewer_dataset.py \
+#     --categories cs.CL,cs.CV,cs.LG --num-papers 300 --year-range 2023-2025
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+DATA_DIR="$REPO_ROOT/data/harbor"
+TRAIN_DATA="['$DATA_DIR/PaperReviews']"
+EVAL_DATA=""
 
 #-----------------------
 # Directory setup
 #-----------------------
-RUN_NAME="codecontest"
+RUN_NAME="paper_reviewer"
 TRIALS_DIR="$HOME/$RUN_NAME/trials_run"
 CKPTS_DIR="$HOME/$RUN_NAME/ckpts"
 EXPORTS_DIR="$HOME/$RUN_NAME/exports"
@@ -30,7 +31,7 @@ LOG_DIR="/tmp/skyrl-logs/$RUN_NAME"
 #-----------------------
 # Training setup
 #-----------------------
-MINI_BATCH_SIZE=32
+MINI_BATCH_SIZE=2
 MAX_MODEL_LEN=32768
 APPLY_OVERLONG_FILTERING=true
 
@@ -39,23 +40,28 @@ LOSS_REDUCTION="seq_mean_token_sum_norm"
 GRPO_NORM_BY_STD=false
 USE_KL_LOSS=false
 
-# Essentially achieves interleaved thinking and hence on-policy training without step-wise training.
-CHAT_TEMPLATE_PATH="$(dirname "$0")/../../../skyrl/train/utils/templates/qwen3_acc_thinking.jinja2"
+# Reward type: "dummy" for pipeline testing, "format" for structure-based rewards
+REWARD_TYPE="dummy"
+
 
 #----------------
 # Infrastructure setup
+# 1 node x 2 H100 GPUs
 #----------------
-NUM_GPUS=4
-ENABLE_RATE_LIMITING=true  # Enable rate/concurrency limiting for trajectory submissions
-TRAJECTORIES_PER_SECOND=5  # Maximum trajectories per second (must be >= 1.0, fractional values like 1.5 are supported). null or omit to disable rate limiting
-MAX_CONCURRENCY=512        # Maximum concurrent trial.run() calls allowed (must be >= 1). null or omit to disable concurrency limiting
+NUM_GPUS_PER_NODE=2
+NUM_NODES=1
+TENSOR_PARALLEL_SIZE=1
+NUM_ENGINES=2  # NUM_GPUS_PER_NODE * NUM_NODES / TENSOR_PARALLEL_SIZE
 
-# Run SkyRL command
-uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.harbor.entrypoints.main_harbor \
+ENABLE_RATE_LIMITING=true
+TRAJECTORIES_PER_SECOND=2
+MAX_CONCURRENCY=2
+
+# Run SkyRL command (using .venv directly to avoid uv creating temp envs that exhaust inode quota)
+python -m examples.train_integrations.harbor.entrypoints.main_paper_reviewer \
   data.train_data=$TRAIN_DATA \
-  data.val_data=$EVAL_DATA \
-  trainer.policy.model.path=Qwen/Qwen3-8B \
-  generator.inference_engine.served_model_name=Qwen3-8B \
+  trainer.policy.model.path=Qwen/Qwen3-4B-Thinking-2507 \
+  generator.inference_engine.served_model_name=Qwen3-4B-Thinking-2507 \
   harbor_trial_config.trials_dir=$TRIALS_DIR \
   trainer.export_path=$EXPORTS_DIR \
   trainer.ckpt_path=$CKPTS_DIR \
@@ -66,19 +72,16 @@ uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.har
   trainer.algorithm.use_kl_loss=$USE_KL_LOSS \
   trainer.placement.colocate_all=true \
   trainer.strategy=fsdp2 \
-  trainer.placement.policy_num_nodes=1 \
-  trainer.placement.ref_num_nodes=1 \
-  trainer.placement.policy_num_gpus_per_node=$NUM_GPUS \
-  trainer.placement.ref_num_gpus_per_node=$NUM_GPUS \
-  generator.inference_engine.num_engines=$NUM_GPUS \
-  generator.inference_engine.tensor_parallel_size=1 \
-  generator.inference_engine.engine_init_kwargs.chat_template=$CHAT_TEMPLATE_PATH \
+  trainer.placement.policy_num_nodes=$NUM_NODES \
+  trainer.placement.policy_num_gpus_per_node=$NUM_GPUS_PER_NODE \
+  generator.inference_engine.num_engines=$NUM_ENGINES \
+  generator.inference_engine.tensor_parallel_size=$TENSOR_PARALLEL_SIZE \
   generator.inference_engine.engine_init_kwargs.max_model_len=$MAX_MODEL_LEN \
   generator.inference_engine.engine_init_kwargs.enable_log_requests=false \
-  trainer.epochs=3 \
-  trainer.eval_batch_size=128 \
-  trainer.eval_before_train=true \
-  trainer.eval_interval=20 \
+  trainer.epochs=1 \
+  trainer.eval_batch_size=2 \
+  trainer.eval_before_train=false \
+  trainer.eval_interval=10 \
   trainer.update_epochs_per_batch=1 \
   trainer.train_batch_size=$MINI_BATCH_SIZE \
   trainer.policy_mini_batch_size=$MINI_BATCH_SIZE \
@@ -88,12 +91,12 @@ uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.har
   trainer.hf_save_interval=5 \
   trainer.algorithm.max_seq_len=$MAX_MODEL_LEN \
   trainer.policy.optimizer_config.lr=1.0e-6 \
-  generator.n_samples_per_prompt=8 \
-  generator.eval_n_samples_per_prompt=4 \
+  generator.n_samples_per_prompt=2 \
+  generator.eval_n_samples_per_prompt=1 \
   generator.apply_overlong_filtering=$APPLY_OVERLONG_FILTERING \
-  generator.inference_engine.gpu_memory_utilization=0.8 \
-  trainer.logger=wandb \
-  trainer.project_name=harbor \
+  generator.inference_engine.gpu_memory_utilization=0.85 \
+  trainer.logger=console \
+  trainer.project_name=paper_reviewer \
   trainer.run_name=$RUN_NAME \
   trainer.resume_mode=latest \
   generator.inference_engine.backend=vllm \
@@ -108,4 +111,5 @@ uv run --isolated --extra fsdp --extra harbor -m examples.train_integrations.har
   generator.rate_limit.enabled=$ENABLE_RATE_LIMITING \
   generator.rate_limit.trajectories_per_second=$TRAJECTORIES_PER_SECOND \
   generator.rate_limit.max_concurrency=$MAX_CONCURRENCY \
+  reward_type=$REWARD_TYPE \
   "$@"

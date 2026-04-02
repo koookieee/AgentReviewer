@@ -72,17 +72,17 @@ class HarborGenerator(GeneratorInterface):
         assert ie_cfg.served_model_name is not None, "served_model_name must be set"
         assert (
             "/" not in ie_cfg.served_model_name
-        ), "served_model_name must not contain '/', Harbor expects hosted_vllm/{model_name}"
+        ), "served_model_name must not contain '/'"
         self._harbor_trial_config_template.setdefault("agent", {})[
             "model_name"
-        ] = f"hosted_vllm/{ie_cfg.served_model_name}"
-        # Use ngrok URL if available (for Daytona Cloud sandboxes to reach vLLM on SLURM nodes)
+        ] = ie_cfg.served_model_name
+        # Use ngrok URL if available (for E2B/Daytona sandboxes to reach vLLM)
         ngrok_url = os.environ.get("NGROK_VLLM_URL")
         if ngrok_url:
-            api_base = f"{ngrok_url}/v1"
+            api_base = ngrok_url
             logger.info(f"Using ngrok URL for agent api_base: {api_base}")
         else:
-            api_base = f"{self.base_url}/v1"
+            api_base = self.base_url
         self._harbor_trial_config_template["agent"].setdefault("kwargs", {})["api_base"] = api_base
 
         logger.info(

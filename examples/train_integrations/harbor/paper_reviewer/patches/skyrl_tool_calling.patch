@@ -1,0 +1,11 @@
+--- a/skyrl/backends/skyrl_train/inference_engines/vllm/vllm_engine.py
++++ b/skyrl/backends/skyrl_train/inference_engines/vllm/vllm_engine.py
+@@ -406,6 +406,8 @@
+             request_logger=request_logger,
+             chat_template=chat_template,
+             chat_template_content_format="auto",
++            enable_auto_tools=openai_kwargs.get("enable_auto_tools", False),
++            tool_parser=openai_kwargs.get("tool_parser", None),
+         )
+
+         self.openai_serving_chat = OpenAIServingChat(
