@@ -6,6 +6,7 @@ The base HarborGenerator treats this as a failure and retries. This subclass
 instead computes rewards from the review output itself.
 """
 
+import asyncio
 import json
 import os
 import re
@@ -21,7 +22,7 @@ from skyrl.backends.skyrl_train.inference_engines.base import ConversationType
 from harbor.trial.trial import Trial
 from harbor.models.trial.config import TrialConfig
 
-from .harbor_generator import HarborGenerator, HarborAgentOutput, MAX_NUM_RETRIES_PER_TRIAL
+from ..harbor_generator import HarborGenerator, HarborAgentOutput, MAX_NUM_RETRIES_PER_TRIAL
 
 
 # Directories to skip when uploading task content to E2B sandbox
@@ -59,7 +60,7 @@ class PaperReviewerTrial(Trial):
         logger.info(f"Uploaded task content from {task_dir} to {workdir}")
 
         # Upload search-papers-skill.md from the harbor examples dir
-        skill_file = Path(__file__).parent / "search-papers" / "SKILL.md"
+        skill_file = Path(__file__).parent / "search" / "SKILL.md"
         if skill_file.is_file():
             target = f"/{workdir.strip('/')}/search-papers-skill.md"
             try:
@@ -83,85 +84,201 @@ class PaperReviewerTrial(Trial):
             finally:
                 os.unlink(tmp_path)
 
-
-# Required sections in the review output (from idea-reviewer.md output format)
-REQUIRED_SECTIONS = [
-    "Novelty Assessment",
-    "Impact Analysis",
-    "Literature Gaps",
-    "Methodological Concerns",
-    "Positioning Recommendations",
-    "Overall Verdict",
-]
-
-# Required numeric scores in the Overall Verdict section
-REQUIRED_SCORES = [
-    "Novelty",
-    "Impact",
-    "Rigor",
-    "Positioning",
-    "Overall",
-]
+        # Install tavily CLI so Claude Code can use web search
+        tavily_api_key = os.environ.get("TAVILY_API_KEY", "")
+        if tavily_api_key:
+            try:
+                result = await self._environment.exec(
+                    command=(
+                        "pip install -q tavily-cli && "
+                        f"tvly login --api-key {tavily_api_key}"
+                    ),
+                    timeout_sec=120,
+                    user="root",
+                )
+                logger.info(f"Installed tavily CLI in sandbox (exit={result.exit_code})")
+            except Exception as e:
+                logger.warning(f"Failed to install tavily CLI: {e}")
 
 
-def compute_format_reward(chat_history: list[dict]) -> float:
-    """Compute a reward based on how well the review follows the expected format.
+# ---- LLM Judge reward ----
 
-    Checks for:
-    - Presence of all 6 required sections (60% of score)
-    - Presence of all 5 numeric scores X/10 (25% of score)
-    - Non-trivial review length (15% of score)
+# Load the judge prompt template once
+_JUDGE_PROMPT_PATH = Path(__file__).parent / "llm_judge_instruction.md"
+_JUDGE_PROMPT_TEMPLATE: str | None = None
 
-    Returns:
-        float in [0.0, 1.0]
-    """
-    # Extract the last assistant message — this should contain the final review
-    last_assistant_content = ""
+
+def _get_judge_prompt_template() -> str:
+    global _JUDGE_PROMPT_TEMPLATE
+    if _JUDGE_PROMPT_TEMPLATE is None:
+        _JUDGE_PROMPT_TEMPLATE = _JUDGE_PROMPT_PATH.read_text()
+    return _JUDGE_PROMPT_TEMPLATE
+
+
+def _extract_last_review(chat_history: list[dict]) -> str:
+    """Extract the last assistant message (the final review)."""
     for msg in reversed(chat_history):
         if msg.get("role") == "assistant":
-            last_assistant_content = msg.get("content", "")
-            break
+            return msg.get("content", "")
+    return ""
 
-    if not last_assistant_content:
+
+def _load_task_metadata(task_dir: Path) -> dict:
+    """Load title, abstract, and human reviews from a task directory.
+
+    Looks for:
+    - task_metadata.json: {"title": "...", "abstract": "...", "human_reviews": ["...", "..."]}
+    - Or falls back to parsing latex/template.tex for title/abstract
+    """
+    metadata = {"title": "", "abstract": "", "human_reviews": []}
+
+    # Try task_metadata.json first
+    meta_path = task_dir / "task_metadata.json"
+    if meta_path.is_file():
+        try:
+            data = json.loads(meta_path.read_text())
+            metadata["title"] = data.get("title", "")
+            metadata["abstract"] = data.get("abstract", "")
+            metadata["human_reviews"] = data.get("human_reviews", [])
+            return metadata
+        except Exception as e:
+            logger.warning(f"Failed to parse {meta_path}: {e}")
+
+    # Fallback: parse title/abstract from LaTeX
+    tex_path = task_dir / "latex" / "template.tex"
+    if tex_path.is_file():
+        tex = tex_path.read_text(errors="replace")
+        # Extract title
+        m = re.search(r"\\title\{([^}]+)\}", tex)
+        if m:
+            metadata["title"] = m.group(1).strip()
+        # Extract abstract
+        m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.DOTALL)
+        if m:
+            metadata["abstract"] = m.group(1).strip()
+
+    # Load human reviews from human_reviews/ directory if present
+    reviews_dir = task_dir / "human_reviews"
+    if reviews_dir.is_dir():
+        for review_file in sorted(reviews_dir.glob("*.md")) + sorted(reviews_dir.glob("*.txt")):
+            metadata["human_reviews"].append(review_file.read_text(errors="replace"))
+
+    # Or from a single human_reviews.json
+    reviews_json = task_dir / "human_reviews.json"
+    if reviews_json.is_file() and not metadata["human_reviews"]:
+        try:
+            metadata["human_reviews"] = json.loads(reviews_json.read_text())
+        except Exception:
+            pass
+
+    return metadata
+
+
+async def compute_llm_judge_reward(chat_history: list[dict], task_dir: Path) -> float:
+    """Call an external LLM to evaluate the review quality.
+
+    Uses the judge prompt from llm_judge_instruction.md, filled with:
+    - Paper title and abstract
+    - Human reference reviews
+    - The model's generated review
+
+    Returns a composite reward in [0.0, 1.0].
+    """
+    from openai import AsyncOpenAI
+
+    model_review = _extract_last_review(chat_history)
+    if not model_review or len(model_review) < 100:
+        logger.warning("LLM judge: review too short or empty, returning 0.0")
         return 0.0
 
-    reward = 0.0
+    metadata = _load_task_metadata(task_dir)
+    if not metadata["title"]:
+        logger.warning(f"LLM judge: no title found in {task_dir}, returning 0.0")
+        return 0.0
 
-    # --- Section presence (60% weight) ---
-    section_weight = 0.6 / len(REQUIRED_SECTIONS)
-    for section in REQUIRED_SECTIONS:
-        # Check for section header (case-insensitive, with or without ### prefix)
-        pattern = rf"(?:^|\n)\s*#{{0,4}}\s*{re.escape(section)}"
-        if re.search(pattern, last_assistant_content, re.IGNORECASE):
-            reward += section_weight
+    # Format human reviews
+    if metadata["human_reviews"]:
+        human_reviews_text = "\n\n---\n\n".join(
+            f"**Human Review {i+1}:**\n\n{review}"
+            for i, review in enumerate(metadata["human_reviews"])
+        )
+    else:
+        logger.warning(f"LLM judge: no human reviews in {task_dir}, skipping issue_overlap and calibration")
+        human_reviews_text = "(No human reviews available for this paper.)"
 
-    # --- Numeric scores (25% weight) ---
-    score_weight = 0.25 / len(REQUIRED_SCORES)
-    for score_name in REQUIRED_SCORES:
-        # Match patterns like "**Novelty**: 7/10" or "Novelty: 8/10"
-        pattern = rf"\*{{0,2}}{re.escape(score_name)}\*{{0,2}}\s*:\s*\d+\s*/\s*10"
-        if re.search(pattern, last_assistant_content, re.IGNORECASE):
-            reward += score_weight
+    # Fill the judge prompt template
+    prompt = _get_judge_prompt_template()
+    prompt = prompt.replace("{title}", metadata["title"])
+    prompt = prompt.replace("{abstract}", metadata["abstract"])
+    prompt = prompt.replace("{human_reviews}", human_reviews_text)
+    prompt = prompt.replace("{model_review}", model_review)
 
-    # --- Review length (15% weight) ---
-    word_count = len(last_assistant_content.split())
-    if word_count >= 500:
-        reward += 0.15
-    elif word_count >= 200:
-        reward += 0.15 * (word_count - 100) / 400  # Linear ramp from 100 to 500 words
+    # Call the judge LLM
+    judge_model = os.environ.get("LLM_JUDGE_MODEL", "gemini-3-flash-preview")
+    judge_api_key = os.environ.get("LLM_JUDGE_API_KEY", os.environ.get("GEMINI_API_KEY", os.environ.get("OPENAI_API_KEY", "")))
+    judge_base_url = os.environ.get("LLM_JUDGE_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
 
-    return min(reward, 1.0)
+    if not judge_api_key:
+        logger.warning("LLM judge: no API key (set LLM_JUDGE_API_KEY or OPENAI_API_KEY), returning 0.0")
+        return 0.0
 
+    client = AsyncOpenAI(api_key=judge_api_key, base_url=judge_base_url)
 
-def compute_dummy_reward(chat_history: list[dict]) -> float:
-    """Always returns 1.0 — for pipeline testing."""
-    return 1.0
+    try:
+        response = await client.chat.completions.create(
+            model=judge_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            max_tokens=2048,
+        )
+        judge_output = response.choices[0].message.content or ""
+    except Exception as e:
+        logger.warning(f"LLM judge API call failed: {e}, returning 0.0")
+        return 0.0
 
+    # Parse JSON from the judge output
+    try:
+        # Extract JSON block (may be wrapped in ```json ... ```)
+        json_match = re.search(r"\{[\s\S]*\}", judge_output)
+        if not json_match:
+            logger.warning(f"LLM judge: no JSON found in output, returning 0.0")
+            return 0.0
+        scores = json.loads(json_match.group())
+    except json.JSONDecodeError as e:
+        logger.warning(f"LLM judge: JSON parse failed: {e}, returning 0.0")
+        return 0.0
 
-REWARD_FUNCTIONS = {
-    "dummy": compute_dummy_reward,
-    "format": compute_format_reward,
-}
+    # Extract individual scores
+    comprehension = float(scores.get("comprehension", {}).get("score", 0))
+    substance = float(scores.get("substance_and_specificity", {}).get("score", 0))
+    insight = float(scores.get("insight", {}).get("score", 0))
+    issue_overlap = float(scores.get("issue_overlap", {}).get("score", 0))
+    calibration = float(scores.get("calibration", {}).get("score", 0))
+
+    # Composite reward — weighted sum
+    if metadata["human_reviews"]:
+        # Full reward with all 5 criteria
+        reward = (
+            0.20 * comprehension +
+            0.25 * substance +
+            0.25 * insight +
+            0.20 * issue_overlap +
+            0.10 * calibration
+        )
+    else:
+        # No human reviews — only use the 3 standalone criteria
+        reward = (
+            0.30 * comprehension +
+            0.35 * substance +
+            0.35 * insight
+        )
+
+    logger.info(
+        f"LLM judge scores: comprehension={comprehension}, substance={substance}, "
+        f"insight={insight}, issue_overlap={issue_overlap}, calibration={calibration} "
+        f"→ reward={reward:.3f}"
+    )
+    return reward
 
 
 def _extract_chat_history_from_trial(trial: Trial) -> tuple[list[dict] | None, int, int]:
@@ -245,6 +362,9 @@ def _extract_chat_history_from_trial(trial: Trial) -> tuple[list[dict] | None, i
     return messages, num_turns, 0
 
 
+REWARD_TYPES = {"llm_judge"}
+
+
 class PaperReviewerGenerator(HarborGenerator):
     """HarborGenerator subclass that computes rewards from review output when no verifier is available."""
 
@@ -255,7 +375,7 @@ class PaperReviewerGenerator(HarborGenerator):
         inference_engine_client,
         tokenizer,
         max_seq_len: int,
-        reward_type: str = "format",
+        reward_type: str = "llm_judge",
     ):
         super().__init__(
             generator_cfg=generator_cfg,
@@ -264,10 +384,9 @@ class PaperReviewerGenerator(HarborGenerator):
             tokenizer=tokenizer,
             max_seq_len=max_seq_len,
         )
-        if reward_type not in REWARD_FUNCTIONS:
-            raise ValueError(f"Unknown reward_type '{reward_type}'. Choose from: {list(REWARD_FUNCTIONS.keys())}")
+        if reward_type not in REWARD_TYPES:
+            raise ValueError(f"Unknown reward_type '{reward_type}'. Choose from: {REWARD_TYPES}")
         self.reward_type = reward_type
-        self._reward_fn = REWARD_FUNCTIONS[reward_type]
         logger.info(f"PaperReviewerGenerator initialized with reward_type='{reward_type}'")
 
     async def harbor_agent_loop(
@@ -340,14 +459,12 @@ class PaperReviewerGenerator(HarborGenerator):
                 if reward is None:
                     # reward is already set to 0 for context_length_error above
                     if results.verifier_result:
-                        # Verifier ran (shouldn't happen with disable=true, but handle gracefully)
                         reward = results.verifier_result.rewards["reward"]
                     else:
-                        # No verifier — compute reward from the review output
-                        reward = self._reward_fn(chat_history)
-                        logger.debug(
-                            f"{prefix} computed {self.reward_type} reward={reward:.3f} "
-                            f"(no verifier result)"
+                        task_dir = Path(prompt)
+                        reward = await compute_llm_judge_reward(chat_history, task_dir)
+                        logger.info(
+                            f"{prefix} LLM judge reward={reward:.3f}"
                         )
 
                 successful = True

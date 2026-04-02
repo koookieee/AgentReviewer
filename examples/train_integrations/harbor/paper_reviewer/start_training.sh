@@ -1,91 +1,79 @@
 #!/bin/bash
-# Start paper reviewer training. Usage:
-#   export E2B_API_KEY=your_key NGROK_AUTHTOKEN=your_token
-#   bash start_training.sh
+# Start paper reviewer training.
+#
+# Prerequisites:
+#   1. Install SkyRL with FSDP backend (see docs.skyrl.ai):
+#        uv venv ~/venvs/skyrl --python 3.12
+#        source ~/venvs/skyrl/bin/activate
+#        cd SkyRL && uv sync --active --extra fsdp --extra harbor
+#        uv pip install openai   # for LLM judge
+#
+#   2. Set env vars:
+#        export E2B_API_KEY=your_key
+#        export GEMINI_API_KEY=your_gemini_key       # for reward computation (Gemini 3 Flash)
+#        export TAVILY_API_KEY=your_key              # optional, for web search in sandbox
+#        export PROXY_PUBLIC_URL=http://<public_ip>:<proxy_external_port>
+#        export SEARCH_PUBLIC_URL=http://<public_ip>:<search_external_port>
+#
+#   3. Activate the venv and run:
+#        source ~/venvs/skyrl/bin/activate
+#        bash start_training.sh
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
-source .venv/bin/activate
 
 # ---- Config ----
-MODEL="Qwen/Qwen3-4B-Thinking-2507"
-MODEL_SHORT="Qwen3-4B-Thinking-2507"
-NUM_GPUS=2
-REWARD_TYPE="dummy"
+MODEL="${MODEL:-Qwen/Qwen3-32B}"
+MODEL_SHORT="${MODEL_SHORT:-Qwen3-32B}"
+NUM_GPUS="${NUM_GPUS:-4}"
+REWARD_TYPE="llm_judge"
 E2B_API_KEY="${E2B_API_KEY:?Set E2B_API_KEY}"
-NGROK_AUTHTOKEN="${NGROK_AUTHTOKEN:?Set NGROK_AUTHTOKEN}"
 DATA_DIR="$REPO_ROOT/data/harbor/PaperReviews"
 VLLM_PORT=8000
 
 # ---- Cleanup old processes ----
 echo "=== Cleaning up ==="
 ray stop --force 2>/dev/null || true
-pkill -9 -f "litellm|ngrok|main_paper_reviewer|stream_proxy" 2>/dev/null || true
+pkill -9 -f "main_paper_reviewer|stream_proxy|search_api" 2>/dev/null || true
 sleep 2
 
-# ---- Anthropic→OpenAI proxy (SkyRL's HTTP endpoint only exposes OpenAI format) ----
-PROXY_PORT=4001
-echo "=== Starting Anthropic→OpenAI proxy ==="
+# ---- Networking config ----
+# Vast.ai exposes these internal ports externally (TCP).
+# Set PROXY_PUBLIC_URL and SEARCH_PUBLIC_URL before running with the external addresses.
+# e.g.: export PROXY_PUBLIC_URL=http://<public_ip>:<proxy_external_port>
+#        export SEARCH_PUBLIC_URL=http://<public_ip>:<search_external_port>
+PROXY_PORT="${PROXY_PORT:-8088}"
+SEARCH_API_PORT="${SEARCH_API_PORT:-8086}"
+
+# ---- Anthropic→OpenAI proxy ----
+echo "=== Starting Anthropic→OpenAI proxy on port $PROXY_PORT ==="
 nohup python3 "$SCRIPT_DIR/stream_proxy.py" "http://localhost:$VLLM_PORT" $PROXY_PORT > /tmp/stream_proxy.log 2>&1 &
 sleep 2
 echo "Proxy OK on port $PROXY_PORT (→ vLLM on port $VLLM_PORT)"
 
-# ---- arxiv-search-kit API ----
-SEARCH_API_PORT=4002
-echo "=== Starting search API ==="
-nohup python3 "$SCRIPT_DIR/search_api.py" --port $SEARCH_API_PORT > /tmp/search_api.log 2>&1 &
-sleep 2
-echo "Search API on port $SEARCH_API_PORT"
-
-# ---- ngrok (multi-tunnel: proxy + search API) ----
-echo "=== Starting ngrok ==="
-command -v ngrok &>/dev/null || { curl -sO https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz && tar xzf ngrok-v3-stable-linux-amd64.tgz && mv ngrok /usr/local/bin/ngrok; }
-ngrok config add-authtoken "$NGROK_AUTHTOKEN" 2>/dev/null
-
-# Write ngrok config for two tunnels
-cat > /tmp/ngrok_tunnels.yml <<EOF
-version: 3
-tunnels:
-  proxy:
-    addr: $PROXY_PORT
-    proto: http
-  search:
-    addr: $SEARCH_API_PORT
-    proto: http
-EOF
-nohup ngrok start --all --config "$HOME/.config/ngrok/ngrok.yml" --config /tmp/ngrok_tunnels.yml --log=stdout --log-level=info > /tmp/ngrok.log 2>&1 &
-sleep 5
-
-# Extract tunnel URLs
-NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | python3 -c "
-import sys, json
-tunnels = json.load(sys.stdin)['tunnels']
-for t in tunnels:
-    if str(t['config']['addr']).endswith('$PROXY_PORT'):
-        print(t['public_url'])
-        break
-")
-SEARCH_API_URL=$(curl -s http://localhost:4040/api/tunnels | python3 -c "
-import sys, json
-tunnels = json.load(sys.stdin)['tunnels']
-for t in tunnels:
-    if str(t['config']['addr']).endswith('$SEARCH_API_PORT'):
-        print(t['public_url'])
-        break
-")
-echo "ngrok proxy URL: $NGROK_URL (→ proxy:$PROXY_PORT → vLLM:$VLLM_PORT)"
-echo "ngrok search URL: $SEARCH_API_URL (→ search_api:$SEARCH_API_PORT)"
+# ---- Determine public URLs ----
+if [ -z "${PROXY_PUBLIC_URL:-}" ]; then
+    PUBLIC_IP=$(curl -s --max-time 5 ifconfig.me 2>/dev/null || echo "localhost")
+    PROXY_PUBLIC_URL="http://${PUBLIC_IP}:${PROXY_PORT}"
+    SEARCH_PUBLIC_URL="${SEARCH_PUBLIC_URL:-http://${PUBLIC_IP}:${SEARCH_API_PORT}}"
+fi
+echo "Proxy URL: $PROXY_PUBLIC_URL"
+echo "Search API URL: $SEARCH_PUBLIC_URL"
 
 # ---- Export env vars BEFORE Ray so workers inherit them ----
-export ANTHROPIC_BASE_URL="$NGROK_URL"
+export ANTHROPIC_BASE_URL="$PROXY_PUBLIC_URL"
 export ANTHROPIC_API_KEY="dummy"
 export ANTHROPIC_AUTH_TOKEN="dummy"
 export E2B_API_KEY
-export NGROK_VLLM_URL="$NGROK_URL"
-export SEARCH_API_URL="$SEARCH_API_URL"
+export TAVILY_API_KEY="${TAVILY_API_KEY:-}"
+export SEARCH_API_URL="$SEARCH_PUBLIC_URL"
+export LLM_JUDGE_MODEL="${LLM_JUDGE_MODEL:-gemini-3-flash-preview}"
+export LLM_JUDGE_API_KEY="${LLM_JUDGE_API_KEY:-$GEMINI_API_KEY}"
+export LLM_JUDGE_BASE_URL="${LLM_JUDGE_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai/}"
 export PYTHONPATH="$REPO_ROOT"
+export RAY_RUNTIME_ENV_HOOK=ray._private.runtime_env.uv_runtime_env_hook.hook
 
 # ---- Ray (started AFTER env vars so workers inherit them) ----
 echo "=== Starting Ray ==="
@@ -93,7 +81,7 @@ ray start --head --num-gpus=$NUM_GPUS
 
 # ---- Training ----
 echo "=== Starting training ==="
-exec python -m examples.train_integrations.harbor.entrypoints.main_paper_reviewer \
+exec python -m examples.train_integrations.harbor.paper_reviewer.entrypoints.main_paper_reviewer \
   "data.train_data=[\"$DATA_DIR\"]" \
   trainer.policy.model.path=$MODEL \
   generator.inference_engine.served_model_name=$MODEL_SHORT \
@@ -109,9 +97,9 @@ exec python -m examples.train_integrations.harbor.entrypoints.main_paper_reviewe
   trainer.strategy=fsdp2 \
   trainer.placement.policy_num_nodes=1 \
   trainer.placement.policy_num_gpus_per_node=$NUM_GPUS \
-  generator.inference_engine.num_engines=$NUM_GPUS \
-  generator.inference_engine.tensor_parallel_size=1 \
-  generator.inference_engine.engine_init_kwargs.max_model_len=98304 \
+  generator.inference_engine.num_engines=2 \
+  generator.inference_engine.tensor_parallel_size=$((NUM_GPUS / 2)) \
+  generator.inference_engine.engine_init_kwargs.max_model_len=32768 \
   generator.inference_engine.engine_init_kwargs.enable_log_requests=false \
   generator.inference_engine.engine_init_kwargs.enable_auto_tool_choice=true \
   generator.inference_engine.engine_init_kwargs.tool_call_parser=hermes \
@@ -126,7 +114,7 @@ exec python -m examples.train_integrations.harbor.entrypoints.main_paper_reviewe
   trainer.micro_train_batch_size_per_gpu=1 \
   trainer.ckpt_interval=5 \
   trainer.hf_save_interval=5 \
-  trainer.algorithm.max_seq_len=98304 \
+  trainer.algorithm.max_seq_len=32768 \
   trainer.policy.optimizer_config.lr=1.0e-6 \
   generator.n_samples_per_prompt=2 \
   generator.eval_n_samples_per_prompt=1 \

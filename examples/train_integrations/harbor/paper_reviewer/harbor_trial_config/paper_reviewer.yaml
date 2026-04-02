@@ -48,13 +48,13 @@ agent:
     store_all_messages: true
 
     # Sampling temperature for the policy model
-    temperature: 1.0
+    temperature: 0.7
 
     # Model info for token budgeting
     # NOTE: max_input_tokens should match generator.inference_engine.engine_init_kwargs.max_model_len
     model_info:
-      max_input_tokens: 65536
-      max_output_tokens: 16384
+      max_input_tokens: 32768
+      max_output_tokens: 8192
       # Set costs to 0 for local training
       input_cost_per_token: 0.0
       output_cost_per_token: 0.0
@@ -82,7 +82,7 @@ environment:
   # More resources for paper processing and literature search
   override_cpus: 1
   override_memory_mb: 2048
-  override_storage_mb: 1024
+  override_storage_mb: 2048
   suppress_override_warnings: true
 
   # Environment-specific settings

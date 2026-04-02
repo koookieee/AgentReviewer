@@ -158,7 +158,7 @@ async def proxy_handler(request: web.Request) -> web.StreamResponse:
     openai_request = {
         "model": model.split("/")[-1] if "/" in model else model,  # strip provider prefix
         "messages": anthropic_messages_to_openai(anthropic_messages),
-        "max_tokens": min(body_json.get("max_tokens", 4096), 16384),
+        "max_tokens": min(body_json.get("max_tokens", 4096), 8192),
         "temperature": body_json.get("temperature", 1.0),
         "stream": False,
     }
@@ -186,6 +186,18 @@ async def proxy_handler(request: web.Request) -> web.StreamResponse:
             except json.JSONDecodeError:
                 return web.Response(body=resp_body, status=resp.status,
                                     content_type=resp.content_type)
+
+            # Log response summary
+            choice = data.get("choices", [{}])[0] if "choices" in data else {}
+            msg = choice.get("message", {}) if isinstance(choice, dict) else {}
+            tool_calls = msg.get("tool_calls") or []
+            finish = choice.get("finish_reason", "?")
+            content_len = len(msg.get("content", "") or "")
+            print(f"[proxy] response: finish={finish} content={content_len}chars tool_calls={len(tool_calls)}", flush=True)
+            if tool_calls:
+                for tc in tool_calls:
+                    fn = tc.get("function", {})
+                    print(f"[proxy]   tool_call: {fn.get('name', '?')}({fn.get('arguments', '')[:100]})", flush=True)
 
             if resp.status != 200 or "error" in data:
                 print(f"[proxy] vLLM error: {resp.status} {resp_body[:200]}", flush=True)
