@@ -150,6 +150,7 @@ def make_harbor_config(cfg: Config, proxy_base_url: str) -> dict[str, Any]:
             "override_timeout_sec": cfg.agent_timeout,
             "model_name": cfg.model_name.split("/")[-1],
             "kwargs": {
+                "api_base": proxy_base_url,
                 "max_turns": cfg.max_turns,
                 "suppress_max_turns_warning": True,
                 "enable_summarize": True,
@@ -445,6 +446,12 @@ async def run(cfg: Config) -> None:
             public_ip = "127.0.0.1"
         proxy_public_url = f"http://{public_ip}:{cfg.proxy_port}"
     logger.info(f"Proxy URL for E2B sandboxes: {proxy_public_url}")
+
+    # Set process-level env vars so Harbor's claude-code agent inherits them
+    # (matching start_training.sh from the working paper_reviewer pipeline)
+    os.environ["ANTHROPIC_BASE_URL"] = proxy_public_url
+    os.environ["ANTHROPIC_API_KEY"] = "dummy"
+    os.environ["ANTHROPIC_AUTH_TOKEN"] = "dummy"
 
     harbor_template = make_harbor_config(cfg, proxy_public_url)
     semaphore = asyncio.Semaphore(cfg.max_concurrent_trials)
