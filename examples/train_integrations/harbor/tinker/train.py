@@ -96,7 +96,7 @@ DEFAULT_DATA_DIR = _repo_data if (_repo_data and _repo_data.is_dir()) else Path(
 
 @dataclass
 class Config:
-    model_name: str = "Qwen/Qwen3-32B"
+    model_name: str = "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16:peft:262144"
     lora_rank: int = 32
     learning_rate: float = 1e-6
     max_steps: int = 200
@@ -111,7 +111,7 @@ class Config:
     agent_name: str = "claude-code"
     max_turns: int = 64
     max_tokens: int = 8192
-    max_input_tokens: int = 32768
+    max_input_tokens: int = 253952  # 262144 - 8192 (leave room for output)
     temperature: float = 0.7
     agent_timeout: int = 2400  # 40 min for paper review
     environment_type: str = "e2b"
@@ -259,12 +259,14 @@ async def run_single_trial(
             config = deepcopy(config_template)
             config["task"] = {"path": str(task.path)}
 
-            # Set ANTHROPIC_API_KEY to session_id so proxy can route
-            config["agent"]["env"]["ANTHROPIC_API_KEY"] = session_id
+            # Set ANTHROPIC_API_KEY to session_id so proxy can route.
+            # AgentConfig has no "env" field (dropped by Pydantic), so
+            # the claude-code agent reads ANTHROPIC_API_KEY from os.environ.
             config["agent"]["kwargs"]["session_id"] = session_id
+            os.environ["ANTHROPIC_API_KEY"] = session_id
 
             trial_config = TrialConfig.model_validate(config)
-            trial = PaperReviewerTrial(trial_config)
+            trial = await PaperReviewerTrial.create(trial_config)
 
             async with semaphore:
                 results = await trial.run()
@@ -455,6 +457,32 @@ async def run(cfg: Config) -> None:
 
     harbor_template = make_harbor_config(cfg, proxy_public_url)
     semaphore = asyncio.Semaphore(cfg.max_concurrent_trials)
+
+    # ── Pre-build E2B templates ──
+    # Each unique task produces a unique E2B template (based on Dockerfile hash).
+    # With force_build=True, concurrent trials for the same task would all try to
+    # build the same template simultaneously, causing E2B to cancel duplicates.
+    # Pre-build one trial per unique task (sequentially), then disable force_build.
+    logger.info("Pre-building E2B templates for all tasks...")
+    for task in tasks:
+        prebuild_config = deepcopy(harbor_template)
+        prebuild_config["task"] = {"path": str(task.path)}
+        prebuild_config["agent"]["kwargs"]["session_id"] = "prebuild"
+        try:
+            trial_config = TrialConfig.model_validate(prebuild_config)
+            trial = await PaperReviewerTrial.create(trial_config)
+            await trial._setup_environment()
+            logger.info(f"Pre-built template for {task.name}")
+            # Tear down the sandbox — we only needed the template built
+            try:
+                await trial._teardown_environment()
+            except Exception:
+                pass
+        except Exception as e:
+            logger.warning(f"Pre-build failed for {task.name}: {e}")
+    # Disable force_build for actual training trials — templates are now cached
+    harbor_template["environment"]["force_build"] = False
+    logger.info("E2B templates pre-built, force_build disabled for training trials")
 
     if cfg.use_wandb:
         import wandb

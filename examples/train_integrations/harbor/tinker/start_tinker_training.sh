@@ -33,13 +33,13 @@ echo "Script dir: $SCRIPT_DIR"
 : "${GEMINI_API_KEY:?Set GEMINI_API_KEY (for LLM judge reward)}"
 
 # ── Config ──
-MODEL="${MODEL:-Qwen/Qwen3-32B}"
+MODEL="${MODEL:-nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16:peft:262144}"
 LORA_RANK="${LORA_RANK:-32}"
 LEARNING_RATE="${LEARNING_RATE:-1e-6}"
 MAX_STEPS="${MAX_STEPS:-200}"
 GROUP_SIZE="${GROUP_SIZE:-2}"
 GROUPS_PER_BATCH="${GROUPS_PER_BATCH:-4}"
-PROXY_PORT="${PROXY_PORT:-8321}"
+PROXY_PORT="${PROXY_PORT:-8082}"
 DATA_DIR="${DATA_DIR:-$REPO_ROOT/data/harbor/PaperReviews}"
 LOG_DIR="${LOG_DIR:-/tmp/paper-reviewer-tinker-logs}"
 
@@ -63,7 +63,6 @@ fi
 export TINKER_API_KEY
 export E2B_API_KEY
 export GEMINI_API_KEY
-export TAVILY_API_KEY="${TAVILY_API_KEY:-}"
 export SEARCH_API_URL
 export PROXY_PUBLIC_URL
 

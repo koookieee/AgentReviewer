@@ -1,29 +1,34 @@
 ---
 name: search
-description: Search academic papers via arxiv-search-kit API and the web via Tavily CLI. Find related work, verify novelty, check baselines, get citations, read full papers, and search the web.
+description: Search academic papers via arxiv-search-kit API. Find related work, verify novelty, check baselines, get citations, get paper summaries.
 argument-hint: "[query or topic]"
 ---
 
 # MANDATORY/IMPORTANT Search Tools
 
-You have two search tools available:
+You have a search tools available:
 
-1. **Paper Search API** — search 928K+ CS/stat arXiv papers, find related work, get citations, download LaTeX source. Uses the API URL in `search_api_url.txt`.
-2. **Tavily CLI (`tvly`)** — web search and URL content extraction. Pre-installed and authenticated.
+1. **Paper Search API** : search 928K+ CS/stat arXiv papers, find related work, get citations, get comprehensive paper summaries. API URL is in `/app/search_api_url.txt`.
 
 ---
 
-## Tool 1: Paper Search API
+## Tool: Paper Search API
 
-### Setup
+### Setup: Do this ONCE at the start, then reuse $SEARCH_API and $PAPER_TITLE/$PAPER_ABSTRACT in every call. You should save the SEARCH_API, PAPER_TITLE AND PAPER_ABSTRACT at start and use them through variables, not typing again completely.
 
 ```bash
-SEARCH_API=$(cat search_api_url.txt)
+# Store the search_api, paper title and abstract you extracted so you can directly use later by using varaibles names and not typing again completely:
+
+SEARCH_API=$(cat /app/search_api_url.txt)
+PAPER_TITLE="<title of the paper under review>"
+PAPER_ABSTRACT="<full abstract of the paper under review>"
 ```
 
 ### Primary Method: Batch Search with Importance Ranking
 
 **This is the recommended method for literature search.** Searches multiple angles simultaneously, deduplicates, and ranks by relevance + citations + venue prestige.
+
+> **IMPORTANT: ALWAYS include `context_title` and `context_abstract` which you have saved, in EVERY search call**, biases results toward the paper's domain and dramatically improves relevance. Never omit them.
 
 ```bash
 curl -s -X POST "$SEARCH_API/batch_search" \
@@ -34,201 +39,77 @@ curl -s -X POST "$SEARCH_API/batch_search" \
       "specific method or technique used in the paper",
       "the problem domain or application area"
     ],
-    "max_results": 15,
+    "max_results": 6, # Preferred 6 for not bloating the context
     "sort_by": "importance",
-    "context_title": "Title of the paper you are reviewing",
-    "context_abstract": "FULL ABSTRACT OF THE PAPER"
+    "context_title": "'"$PAPER_TITLE"'",
+    "context_abstract": "'"$PAPER_ABSTRACT"'"
   }'
 ```
 
 **Why this is best:**
 - Multiple queries cover different angles (direct competitors, methods, applications)
-- `context_title` + `context_abstract` bias results toward the paper's domain
+- `context_title` + `context_abstract` bias results toward the paper's domain, **always pass these**
 - Results are deduplicated across queries
 
-Each result includes: `arxiv_id`, `title`, `abstract`, `authors`, `year`, `similarity_score`, `citation_count`, `venue`, `tldr`.
+Each result includes: `arxiv_id`, `title`, `abstract`, `year`, `citation_count`
 
 Optional parameters: `categories` (e.g. `["cs.LG", "cs.CL"]`), `year`, `date_from`, `date_to`, `conference` (e.g. `"NeurIPS"`), `min_citations`.
 
-### POST /search — Single query
+
+### POST /summarize_paper, Get a comprehensive summary of a paper
+
+**This is the recommended way to read related papers.** Returns a detailed summary covering the paper's contributions, methods, results, and limitations, without downloading the full source.
+
+Single paper:
 
 ```bash
-curl -s -X POST "$SEARCH_API/search" \
+curl -s -X POST "$SEARCH_API/summarize_paper" \
   -H "Content-Type: application/json" \
-  -d '{
-    "query": "vision transformer pruning",
-    "max_results": 10,
-    "sort_by": "importance",
-    "categories": ["cs.CV", "cs.LG"],
-    "context_title": "Paper Title",
-    "context_abstract": "Abstract..."
-  }'
+  -d '{"arxiv_id": "1706.03762"}'
 ```
 
-### POST /find_related — Papers similar to a known paper
-
-No query needed — finds nearest neighbors by embedding similarity.
+Multiple papers at once (parallel):
 
 ```bash
-curl -s -X POST "$SEARCH_API/find_related" \
-  -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "1706.03762", "max_results": 10}'
-```
-
-### POST /citations — Papers that cite a given paper
-
-```bash
-curl -s -X POST "$SEARCH_API/citations" \
-  -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "1706.03762", "limit": 50}'
-```
-
-### POST /references — Papers referenced by a given paper
-
-```bash
-curl -s -X POST "$SEARCH_API/references" \
-  -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "1706.03762", "limit": 50}'
-```
-
-### POST /enrich — Add citation/venue data to papers
-
-```bash
-curl -s -X POST "$SEARCH_API/enrich" \
+curl -s -X POST "$SEARCH_API/summarize_paper" \
   -H "Content-Type: application/json" \
   -d '{"arxiv_ids": ["1706.03762", "2010.11929"]}'
 ```
 
-Returns: `citation_count`, `influential_citation_count`, `venue`, `tldr`, `publication_types`.
-
-### POST /get_paper — Look up a single paper by arXiv ID
-
-```bash
-curl -s -X POST "$SEARCH_API/get_paper" \
-  -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "1706.03762"}'
+Response:
+```json
+{
+  "summaries": {
+    "1706.03762": "Comprehensive summary of Attention Is All You Need...",
+    "2010.11929": "Comprehensive summary of ViT..."
+  }
+}
 ```
 
-### POST /download_source — Download and extract a paper's LaTeX source
+Optional parameters: `max_concurrent` (default 5) to control parallelism.
 
-Step 1: Download and get the file listing:
+## POST /ask_paper, Ask any question about a paper and get an answer grounded in the paper's content.
+
+Use when you need a specific answer from a paper — exact method details, ablation results, experimental setup — rather than a full summary.
 
 ```bash
-curl -s -X POST "$SEARCH_API/download_source" \
+curl -s -X POST "$SEARCH_API/ask_paper" \
   -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "1706.03762"}'
+  -d '{
+    "arxiv_id": "1706.03762",
+    "question": "What are the key contributions of this paper?"
+  }'
 ```
 
 Response:
 ```json
 {
   "arxiv_id": "1706.03762",
-  "files": [
-    {"path": "main.tex", "size_bytes": 45000},
-    {"path": "references.bib", "size_bytes": 12000},
-    {"path": "figures/arch.png", "size_bytes": 85000}
-  ],
-  "total_files": 3
+  "question": "...",
+  "answer": "..."
 }
 ```
 
-Step 2: Read a specific file:
-
-```bash
-curl -s -X POST "$SEARCH_API/read_file" \
-  -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "1706.03762", "file_path": "main.tex"}'
-```
-
-Response:
-```json
-{
-  "arxiv_id": "1706.03762",
-  "file_path": "main.tex",
-  "content": "\\documentclass{article}\n...",
-  "truncated": false,
-  "size_bytes": 45000
-}
-```
-
-Use `"max_chars": 50000` to limit large files. Default is 100K chars.
-
-### Sort Options
-
-| `sort_by` | What it does |
-|-----------|-------------|
-| `"relevance"` | Pure semantic + BM25 hybrid score (default) |
-| `"importance"` | Relevance + citations + venue prestige (**recommended**) |
-| `"citations"` | Most cited first |
-| `"date"` | Newest first |
-
----
-
-## Tool 2: Tavily Web Search (`tvly`)
-
-Tavily is pre-installed and authenticated. Use it for **web search** — finding latest information about a topic, blog posts, research papers, project pages, or any web content.
-
-### Search the web
-
-```bash
-tvly search "your search query"
-```
-
-Options:
-| Option | Values | Default | Description |
-|--------|--------|---------|-------------|
-| `--depth` | `basic`, `advanced` | `advanced` | Search depth. `advanced` returns more detailed results |
-| `--max-results` | `0-20` | `5` | Number of results |
-| `--time-range` | `day`, `week`, `month`, `year` | — | Filter by time window |
-| `--start-date` | `YYYY-MM-DD` | — | Results after this date |
-| `--end-date` | `YYYY-MM-DD` | — | Results before this date |
-| `--include-raw-content` | `markdown`, `text` | — | Include full page content |
-| `--json` | flag | `false` | Output raw JSON |
-
-Examples:
-
-```bash
-# Search for recent work on a topic
-tvly search "process reward models for LLM training 2025"
-
-# Get full page content for deeper reading
-tvly search "RLHF alignment techniques" --include-raw-content markdown --max-results 3
-
-# Search within a time range
-tvly search "vision language models" --start-date 2025-01-01 --max-results 10
-
-# JSON output for parsing
-tvly search "neural architecture search" --json | python3 -m json.tool
-```
-
-### Extract content from a URL
-
-When you find a relevant URL (from search results, paper references, or project pages), extract its content:
-
-```bash
-tvly extract https://example.com/article
-```
-
-Options:
-| Option | Values | Default | Description |
-|--------|--------|---------|-------------|
-| `--query` | string | — | Rerank extracted chunks by relevance to this query |
-| `--chunks-per-source` | `1-5` | — | Number of content chunks per URL (requires `--query`) |
-| `--extract-depth` | `basic`, `advanced` | `basic` | `advanced` handles JavaScript-rendered pages |
-| `--format` | `markdown`, `text` | `markdown` | Output format |
-
-Examples:
-
-```bash
-# Extract content from a paper's project page
-tvly extract https://github.com/some-project/repo
-
-# Extract with relevance filtering
-tvly extract https://docs.python.org/3/tutorial/ --query "list comprehensions" --chunks-per-source 3
-
-# Extract multiple URLs at once (up to 20)
-tvly extract https://example.com/page1 https://example.com/page2
-```
 
 ---
 
@@ -258,7 +139,7 @@ curl -s -X POST "$SEARCH_API/batch_search" \
       "the key baseline method",
       "the claimed novelty in different words"
     ],
-    "max_results": 20,
+    "max_results": 6, # Preferred 6 for not bloating the context
     "sort_by": "importance",
     "context_title": "...",
     "context_abstract": "..."
@@ -272,46 +153,48 @@ For the top 3-5 results, use `/find_related` to explore their neighborhood:
 ```bash
 curl -s -X POST "$SEARCH_API/find_related" \
   -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "FOUND_PAPER_ID", "max_results": 10}'
+  -d '{"arxiv_id": "FOUND_PAPER_ID", "max_results": 6}'
 ```
 
-### Step 4: Check citation context
 
-For key competing papers, check who cites them to find the latest work:
+### Step 4: Get summaries of important papers
+
+For the 3-5 most relevant papers, get comprehensive summaries:
 
 ```bash
-curl -s -X POST "$SEARCH_API/citations" \
+# Summarize multiple papers at once
+curl -s -X POST "$SEARCH_API/summarize_paper" \
   -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "KEY_COMPETITOR_ID", "limit": 30}'
+  -d '{"arxiv_ids": ["PAPER_ID_1", "PAPER_ID_2", "PAPER_ID_3"]}'
 ```
 
-### Step 5: Read full text of important papers
 
-For the 3-5 most relevant papers, download their LaTeX source:
+---
+
+## POST /ask_paper: Ask any question about a paper, grounded in its full content
+
+Use when you need a specific answer from a paper — exact method details, ablation results, experimental setup — rather than a full summary.
 
 ```bash
-# Get file listing
-curl -s -X POST "$SEARCH_API/download_source" \
+curl -s -X POST "$SEARCH_API/ask_paper" \
   -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "PAPER_ID"}'
-
-# Read the main .tex file
-curl -s -X POST "$SEARCH_API/read_file" \
-  -H "Content-Type: application/json" \
-  -d '{"arxiv_id": "PAPER_ID", "file_path": "main.tex"}'
+  -d '{
+    "arxiv_id": "1706.03762",
+    "question": "What are the key contributions of this paper?"
+  }'
 ```
 
-### Step 6: Web search for non-arXiv context or finding latest SOTA research/projects
-
-Use Tavily heavily for things the paper search API can't find: SOTA in the current field of the paper you are revewing, blog posts, project pages, benchmarks:
-
-```bash
-# JUST AN EXAMPLE
-tvly search "PROJECT_NAME benchmark results 2026"
-
-# Read a project page or blog post
-tvly extract https://github.com/org/project --query "methodology and results"
+Response:
+```json
+{
+  "arxiv_id": "1706.03762",
+  "question": "...",
+  "answer": "..."
+}
 ```
+
+Ask really good questions.
+
 
 ---
 
@@ -321,16 +204,8 @@ tvly extract https://github.com/org/project --query "methodology and results"
 |---|---|
 | Find academic papers on a topic | Paper Search API `/batch_search` |
 | Find papers related to a specific paper | Paper Search API `/find_related` |
-| Check who cited a paper | Paper Search API `/citations` |
-| Read a paper's LaTeX source | Paper Search API `/download_source` + `/read_file` |
-| Get citation counts and venue info | Paper Search API `/enrich` |
-| Search the web to find the SOTA in the field | `tvly search` |
-| Find latest benchmarks and results | `tvly search` |
-| Find latest paper/work in the field | `tvly search` |
-| Learn more about the domain/topic of the paper | `tvly search` |
-| Read content from a URL | `tvly extract` |
-| Find blog posts, docs, project pages | `tvly search` |
-| Find non-arXiv papers (OpenReview, etc.) | `tvly search` then `tvly extract` on the URL |
+| Get a full overview of a paper | Paper Search API `/summarize_paper` |
+| Get a specific answer from a paper | Paper Search API `/ask_paper` |
 
 ## Paper Search Tips
 
@@ -340,4 +215,3 @@ tvly extract https://github.com/org/project --query "methodology and results"
 - **Filter by category** when needed: `"categories": ["cs.CV"]`
 - **Filter by year/date** for recent work: `"year": 2024` or `"date_from": "2024-01-01"`
 - **Use `min_citations`** to filter noise: `"min_citations": 5`
-- **Extensively use `tavily`** to find the latest information, like SOTA in the field, latest papers/research projects, benchmarks, top performance on benchmarks

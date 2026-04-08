@@ -24,8 +24,38 @@ logger = logging.getLogger(__name__)
 # Directories to skip when uploading task content to E2B sandbox
 _TASK_SKIP_DIRS = {"environment", ".git", "__pycache__"}
 
-# Path to search skill and judge prompt relative to the paper_reviewer package
-_PAPER_REVIEWER_DIR = Path(__file__).resolve().parent.parent / "paper_reviewer"
+# Path to search skill and judge prompt — supports both repo layout
+# (harbor/tinker/ → harbor/paper_reviewer/) and flat remote layout
+# (/root/tinker_training/ → /root/tinker_training/paper_reviewer/)
+_PAPER_REVIEWER_DIR = (
+    Path(__file__).resolve().parent.parent / "paper_reviewer"
+    if (Path(__file__).resolve().parent.parent / "paper_reviewer").is_dir()
+    else Path(__file__).resolve().parent / "paper_reviewer"
+)
+
+
+def _trim_to_conclusion(content: str) -> str:
+    """Trim paper content to end of Conclusion section, dropping appendices/references.
+
+    Handles both Markdown (# Conclusion) and LaTeX (\\section{Conclusion}) formats.
+    Returns original content unchanged if no Conclusion section is found.
+    """
+    m = re.search(
+        r"^(# Conclusion|\\section\*?\{Conclusion\})",
+        content,
+        re.MULTILINE | re.IGNORECASE,
+    )
+    if not m:
+        return content
+
+    # Find the next top-level section after Conclusion to know where to cut
+    after_conclusion = content[m.start():]
+    next_section = re.search(r"^(# (?!Conclusion)|\\section\*?\{(?!Conclusion))", after_conclusion[1:], re.MULTILINE | re.IGNORECASE)
+    end = m.start() + 1 + next_section.start() if next_section else len(content)
+
+    trimmed = content[:end]
+    logger.info(f"Trimmed paper to Conclusion: {len(content):,} → {end:,} chars")
+    return trimmed
 
 
 class PaperReviewerTrial(Trial):
@@ -36,6 +66,34 @@ class PaperReviewerTrial(Trial):
     environments get them via bind-mount. This subclass uploads the task content
     directory after environment setup so the agent can actually read the paper.
     """
+
+    async def _upload_latex_trimmed(self, latex_dir: Path, target: str) -> None:
+        """Upload latex/ dir, trimming template.tex to Conclusion before upload."""
+        tex_file = latex_dir / "template.tex"
+        if not tex_file.is_file():
+            await self._environment.upload_dir(latex_dir, target)
+            return
+
+        original = tex_file.read_text(errors="replace")
+        trimmed = _trim_to_conclusion(original)
+
+        if trimmed == original:
+            # No Conclusion found — upload as-is
+            await self._environment.upload_dir(latex_dir, target)
+            return
+
+        # Write trimmed content to a temp file and upload in place of the original
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as f:
+            f.write(trimmed)
+            tmp_tex = Path(f.name)
+
+        try:
+            # Upload the rest of the latex dir first, then overwrite template.tex
+            await self._environment.upload_dir(latex_dir, target)
+            tex_target = f"{target.rstrip('/')}/template.tex"
+            await self._environment.upload_file(tmp_tex, tex_target)
+        finally:
+            tmp_tex.unlink(missing_ok=True)
 
     async def _setup_environment(self) -> None:
         await super()._setup_environment()
@@ -52,20 +110,31 @@ class PaperReviewerTrial(Trial):
                 if item.is_file():
                     await self._environment.upload_file(item, target)
                 elif item.is_dir():
-                    await self._environment.upload_dir(item, target)
+                    if item.name == "latex":
+                        await self._upload_latex_trimmed(item, target)
+                    else:
+                        await self._environment.upload_dir(item, target)
             except Exception as e:
                 logger.warning(f"Failed to upload {item.name} to {target}: {e}")
         logger.info(f"Uploaded task content from {task_dir} to {workdir}")
 
-        # Upload search-papers-skill.md
+        # Upload search skill into ~/.claude/skills/search-papers/ so Claude Code
+        # discovers it natively. Harbor's setup command copies ~/.claude/skills/
+        # into CLAUDE_CONFIG_DIR/skills/ before the agent starts.
         skill_file = _PAPER_REVIEWER_DIR / "search" / "SKILL.md"
         if skill_file.is_file():
-            target = f"/{workdir.strip('/')}/search-papers-skill.md"
+            skill_target = "/root/.claude/skills/search-papers/SKILL.md"
             try:
-                await self._environment.upload_file(skill_file, target)
-                logger.info(f"Uploaded search skill to {target}")
+                await self._environment.upload_file(skill_file, skill_target)
+                logger.info(f"Uploaded search skill to {skill_target}")
             except Exception as e:
                 logger.warning(f"Failed to upload search skill: {e}")
+            # Also upload to workdir as fallback for direct file reading
+            fallback_target = f"/{workdir.strip('/')}/search-papers-skill.md"
+            try:
+                await self._environment.upload_file(skill_file, fallback_target)
+            except Exception:
+                pass
 
         # Write search API URL so the agent can discover it
         search_api_url = os.environ.get("SEARCH_API_URL", "")
@@ -82,21 +151,6 @@ class PaperReviewerTrial(Trial):
             finally:
                 os.unlink(tmp_path)
 
-        # Install tavily CLI for web search
-        tavily_api_key = os.environ.get("TAVILY_API_KEY", "")
-        if tavily_api_key:
-            try:
-                result = await self._environment.exec(
-                    command=(
-                        "pip install -q tavily-cli && "
-                        f"tvly login --api-key {tavily_api_key}"
-                    ),
-                    timeout_sec=120,
-                    user="root",
-                )
-                logger.info(f"Installed tavily CLI in sandbox (exit={result.exit_code})")
-            except Exception as e:
-                logger.warning(f"Failed to install tavily CLI: {e}")
 
 
 # ── LLM Judge reward ────────────────────────────────────────────────────
@@ -135,16 +189,28 @@ def _load_task_metadata(task_dir: Path) -> dict:
         except Exception as e:
             logger.warning(f"Failed to parse {meta_path}: {e}")
 
-    # Fallback: parse title/abstract from LaTeX
+    # Fallback: parse title/abstract from template.tex (may be markdown or LaTeX)
     tex_path = task_dir / "latex" / "template.tex"
     if tex_path.is_file():
         tex = tex_path.read_text(errors="replace")
-        m = re.search(r"\\title\{([^}]+)\}", tex)
+        # Markdown title: first # heading
+        m = re.search(r"^# (.+)$", tex, re.MULTILINE)
         if m:
             metadata["title"] = m.group(1).strip()
-        m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.DOTALL)
+        else:
+            # LaTeX title fallback
+            m = re.search(r"\\title\{([^}]+)\}", tex)
+            if m:
+                metadata["title"] = m.group(1).strip()
+        # Markdown abstract: ## Abstract section
+        m = re.search(r"^## Abstract\s*\n(.*?)(?=^#|\Z)", tex, re.MULTILINE | re.DOTALL)
         if m:
             metadata["abstract"] = m.group(1).strip()
+        else:
+            # LaTeX abstract fallback
+            m = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.DOTALL)
+            if m:
+                metadata["abstract"] = m.group(1).strip()
 
     # Load human reviews
     reviews_dir = task_dir / "human_reviews"
@@ -210,7 +276,7 @@ async def compute_llm_judge_reward(chat_history: list[dict], task_dir: Path) -> 
             model=judge_model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
-            max_tokens=2048,
+            max_tokens=16384,
         )
         judge_output = response.choices[0].message.content or ""
     except Exception as e:
@@ -220,7 +286,7 @@ async def compute_llm_judge_reward(chat_history: list[dict], task_dir: Path) -> 
     try:
         json_match = re.search(r"\{[\s\S]*\}", judge_output)
         if not json_match:
-            logger.warning("LLM judge: no JSON found in output, returning 0.0")
+            logger.warning(f"LLM judge: no JSON found in output (len={len(judge_output)}, first 500 chars: {judge_output[:500]}), returning 0.0")
             return 0.0
         scores = json.loads(json_match.group())
     except json.JSONDecodeError as e:

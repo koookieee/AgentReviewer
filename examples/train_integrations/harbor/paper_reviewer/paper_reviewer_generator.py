@@ -59,15 +59,23 @@ class PaperReviewerTrial(Trial):
                 logger.warning(f"Failed to upload {item.name} to {target}: {e}")
         logger.info(f"Uploaded task content from {task_dir} to {workdir}")
 
-        # Upload search-papers-skill.md from the harbor examples dir
+        # Upload search skill into ~/.claude/skills/search-papers/ so Claude Code
+        # discovers it natively. Harbor's setup command copies ~/.claude/skills/
+        # into CLAUDE_CONFIG_DIR/skills/ before the agent starts.
         skill_file = Path(__file__).parent / "search" / "SKILL.md"
         if skill_file.is_file():
-            target = f"/{workdir.strip('/')}/search-papers-skill.md"
+            skill_target = "/root/.claude/skills/search-papers/SKILL.md"
             try:
-                await self._environment.upload_file(skill_file, target)
-                logger.info(f"Uploaded search skill to {target}")
+                await self._environment.upload_file(skill_file, skill_target)
+                logger.info(f"Uploaded search skill to {skill_target}")
             except Exception as e:
                 logger.warning(f"Failed to upload search skill: {e}")
+            # Also upload to workdir as fallback for direct file reading
+            fallback_target = f"/{workdir.strip('/')}/search-papers-skill.md"
+            try:
+                await self._environment.upload_file(skill_file, fallback_target)
+            except Exception:
+                pass
 
         # Write search API URL so the agent can discover it
         search_api_url = os.environ.get("SEARCH_API_URL", "")
@@ -94,7 +102,6 @@ class PaperReviewerTrial(Trial):
                         f"tvly login --api-key {tavily_api_key}"
                     ),
                     timeout_sec=120,
-                    user="root",
                 )
                 logger.info(f"Installed tavily CLI in sandbox (exit={result.exit_code})")
             except Exception as e:
