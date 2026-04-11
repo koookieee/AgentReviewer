@@ -1,8 +1,10 @@
 # arxiv-search-kit
 
-Offline ArXiv paper search over 928K CS papers. SPECTER2 embeddings + LanceDB vector index + BM25 hybrid retrieval.
+Offline ArXiv paper search over 928K CS papers. Two embedding backends, LanceDB vector index + BM25 hybrid retrieval.
 
-**40ms per search on GPU. 99% precision@10. No API keys required. No rate limits.**
+**SPECTER2**: 40ms per search on GPU. No API keys required. No rate limits.
+
+**Gemini-2**: Higher quality semantic search via `gemini-embedding-2-preview` (3072-dim). Requires a Gemini API key.
 
 ## Install
 
@@ -46,11 +48,42 @@ uv pip install arxiv-search-kit[gpu]
 ```python
 from arxiv_search_kit import ArxivClient
 
-client = ArxivClient()  # downloads index on first run
+# SPECTER2 (default) — local, no API key needed
+client = ArxivClient()
+
+# Gemini-2 — higher quality, requires Gemini API key
+client = ArxivClient(embedding="gemini", gemini_api_key="AIza...")
+# or set GEMINI_API_KEY env var and omit gemini_api_key
 
 results = client.search("attention mechanism transformers")
 for paper in results:
     print(paper.title, paper.arxiv_id)
+```
+
+## Default vs Extra Fields
+
+By default, search results include only the essential fields:
+**arxiv_id, title, abstract, citation_count** (citation_count populated only when using `sort_by="importance"` or `sort_by="citations"`).
+
+Pass `details="extra"` to get all fields.
+
+```python
+# default — only core fields
+results = client.search("transformers")
+results.to_dicts()
+# [{"arxiv_id": "...", "title": "...", "abstract": "...", "citation_count": None}, ...]
+
+# extra — all fields (authors, categories, doi, venue, tldr, etc.)
+results = client.search("transformers", details="extra")
+results.to_dicts()
+# [{"arxiv_id": "...", "title": "...", "authors": [...], "categories": [...], ...}, ...]
+```
+
+Works the same for `batch_search` and `find_related`:
+
+```python
+results = client.batch_search(["BERT", "GPT"], sort_by="importance", details="extra")
+related  = client.find_related("1706.03762", details="extra")
 ```
 
 ## Search
@@ -137,7 +170,7 @@ results = client.batch_search(
 
 ### Find Related Papers
 
-Find papers similar to a given paper using its stored SPECTER2 embedding. No keyword query needed.
+Find papers similar to a given paper using its stored embedding. No keyword query needed.
 
 ```python
 related = client.find_related("1706.03762", max_results=10)  # Attention Is All You Need
@@ -251,6 +284,49 @@ paths = client.download_papers(results.papers, output_dir="./sources", format="s
 
 Downloads are streamed to disk (no full file in memory). Failed downloads are skipped with a warning.
 
+## Paper Q&A
+
+Query any paper with natural language — summarization, specific questions, anything. Downloads the LaTeX source from ArXiv, converts it to clean Markdown via pandoc (preserving equations and tables as raw LaTeX blocks), then passes your query + the paper content to Gemini.
+
+```bash
+pip install arxiv-search-kit[summarize]
+# also requires pandoc: apt install pandoc
+```
+
+```python
+# summarize
+response = client.query_paper("1706.03762", "summarize this paper")
+
+# ask a specific question
+response = client.query_paper("1706.03762", "What is the scaling factor in the attention mechanism and why is it used?")
+
+# any natural language — the LLM handles intent
+response = client.query_paper("1706.03762", "give me a tldr")
+response = client.query_paper("1706.03762", "what datasets were used and how did they split them?")
+response = client.query_paper("1706.03762", "explain the loss function")
+
+# from a Paper object
+results = client.search("vision transformers", max_results=1)
+response = client.query_paper(results[0], "what are the key contributions?")
+
+# set env var to avoid passing api_key every time
+# export GEMINI_API_KEY=your-gemini-key
+response = client.query_paper("1706.03762", "summarize")
+```
+
+### Batch — parallel across multiple papers
+
+Pass a list to query multiple papers in parallel. Returns a dict mapping ArXiv ID to response.
+
+```python
+results = client.search("vision transformers", max_results=5)
+responses = client.query_paper(results.papers, "summarize this paper")
+# {"2401.12345": "...", "2312.67890": "...", ...}
+
+# control parallelism (default: 5 concurrent)
+responses = client.query_paper(results.papers, "what datasets were used?", max_concurrent=3)
+```
+
 ## Async Support
 
 All main methods have async variants:
@@ -260,6 +336,8 @@ results = await client.async_search("transformers", max_results=10)
 results = await client.async_batch_search(queries=[...], sort_by="importance")
 related = await client.async_find_related("1706.03762")
 await client.async_enrich(results)
+response = await client.async_query_paper("1706.03762", "summarize this paper")
+response = await client.async_query_paper(results.papers, "what optimizer was used?")
 ```
 
 ## Venue Prestige Tiers
@@ -288,15 +366,49 @@ final_score = 0.6 * relevance + 0.4 * importance
 
 Conference-to-category mappings: CVPR, NeurIPS, ICML, ICLR, ACL, EMNLP, NAACL, AAAI, IJCAI, CHI, KDD, SIGIR, RSS, ICRA, and [many more](arxiv_search_kit/categories.py).
 
+## Embedding Backends
+
+### SPECTER2 (default)
+- Local transformer model ([allenai/specter2](https://huggingface.co/allenai/specter2)), 768-dim embeddings
+- No API key, no rate limits, ~40ms on GPU
+- Best with `context_title` + `context_abstract` for keyword queries
+- Index: [anonymousatom/arxiv-search-index](https://huggingface.co/datasets/anonymousatom/arxiv-search-index) (~4GB)
+
+### Gemini-2
+- `gemini-embedding-2-preview` via Google Gemini API, 3072-dim embeddings
+- Requires a Gemini API key (`gemini_api_key=` or `GEMINI_API_KEY` env var)
+- Works with just a query string — no title or abstract needed
+- Better out-of-the-box quality for keyword queries — asymmetric retrieval format handles free-text queries natively
+- `batch_search` pre-embeds all queries in a single API call (not N separate calls)
+- Index: [Vidushee/arxiv-gemini-index](https://huggingface.co/datasets/Vidushee/arxiv-gemini-index) (~10GB)
+
+```python
+# SPECTER2 — fast, local, no key needed
+client = ArxivClient()
+results = client.search("attention mechanism transformers")  # works fine
+
+# SPECTER2 benefits from context when you have it
+results = client.search(
+    "attention mechanism transformers",
+    context_title="My Paper Title",
+    context_abstract="We propose...",
+)
+
+# Gemini-2 — higher quality, just a query is enough
+client = ArxivClient(embedding="gemini", gemini_api_key="AIza...")
+results = client.search("attention mechanism transformers")
+results = client.batch_search(["BERT", "GPT", "RLHF"])  # single API call for all queries
+```
+
 ## How It Works
 
-1. **Index**: 928K papers embedded with [SPECTER2](https://huggingface.co/allenai/specter2), stored in [LanceDB](https://lancedb.github.io/lancedb/) (~4GB)
-2. **Retrieval**: Hybrid search — dense (SPECTER2 cosine) + sparse (BM25) fused via Reciprocal Rank Fusion
+1. **Index**: 928K papers embedded with SPECTER2 or Gemini-2, stored in [LanceDB](https://lancedb.github.io/lancedb/)
+2. **Retrieval**: Hybrid search — dense (cosine) + sparse (BM25) fused via Reciprocal Rank Fusion
 3. **Re-ranking**: Personalized PageRank on a k-NN similarity graph built from candidate embeddings
 4. **Enrichment**: Optional citation/venue data from [Semantic Scholar API](https://api.semanticscholar.org/api-docs/graph)
 5. **Importance**: Blends relevance with citation count, venue prestige, and influential citation ratio
 
-The index auto-downloads from [HuggingFace](https://huggingface.co/datasets/anonymousatom/arxiv-search-index) on first use.
+Indexes auto-download from HuggingFace on first use.
 
 ## Building Your Own Index
 

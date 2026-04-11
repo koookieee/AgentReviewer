@@ -290,66 +290,46 @@ async def handle_read_file(request: web.Request) -> web.Response:
     })
 
 
-async def handle_summarize_paper(request: web.Request) -> web.Response:
-    """Get a comprehensive AI-generated summary of one or more papers."""
+async def handle_query_paper(request: web.Request) -> web.Response:
+    """Query papers with natural language — summarize, ask questions, anything.
+
+    Single paper:  {"arxiv_id": "1706.03762", "query": "summarize this paper"}
+    Multiple:      {"arxiv_ids": ["1706.03762", "1810.04805"], "query": "what is the main contribution?"}
+    """
     import os
 
     body = await request.json()
     arxiv_ids = body.get("arxiv_ids", [])
     arxiv_id = body.get("arxiv_id", "")
+    query = body.get("query", "")
     api_key = body.get("api_key", os.environ.get("GEMINI_API_KEY", ""))
 
-    # Support both single ID and list
     if arxiv_id and not arxiv_ids:
         arxiv_ids = [arxiv_id]
     if not arxiv_ids:
         return web.json_response({"error": "Provide arxiv_id or arxiv_ids"}, status=400)
+    if not query:
+        return web.json_response({"error": "Provide query"}, status=400)
     if not api_key:
         return web.json_response({"error": "No api_key provided and GEMINI_API_KEY not set"}, status=400)
 
-    log.info(f"summarize_paper: {len(arxiv_ids)} papers")
+    log.info(f"query_paper: {len(arxiv_ids)} papers, query={query!r}")
 
     client = _get_client()
     max_concurrent = body.get("max_concurrent", 5)
     try:
-        result = client.summarize_paper(
+        result = client.query_paper(
             arxiv_ids if len(arxiv_ids) > 1 else arxiv_ids[0],
+            query,
             api_key=api_key,
             max_concurrent=max_concurrent,
         )
     except Exception as e:
-        return web.json_response({"error": f"Summarization failed: {e}"}, status=500)
+        return web.json_response({"error": f"query_paper failed: {e}"}, status=500)
 
     if isinstance(result, str):
-        return web.json_response({"summaries": {arxiv_ids[0]: result}})
-    return web.json_response({"summaries": result})
-
-
-async def handle_ask_paper(request: web.Request) -> web.Response:
-    """Answer a question about a paper using its LaTeX source and Gemini."""
-    import os
-
-    body = await request.json()
-    arxiv_id = body.get("arxiv_id", "")
-    question = body.get("question", "")
-    api_key = body.get("api_key", os.environ.get("GEMINI_API_KEY", ""))
-
-    if not arxiv_id:
-        return web.json_response({"error": "Provide arxiv_id"}, status=400)
-    if not question:
-        return web.json_response({"error": "Provide question"}, status=400)
-    if not api_key:
-        return web.json_response({"error": "No api_key provided and GEMINI_API_KEY not set"}, status=400)
-
-    log.info(f"ask_paper: arxiv_id={arxiv_id!r} question={question!r}")
-
-    client = _get_client()
-    try:
-        answer = client.ask_paper(arxiv_id, question, api_key=api_key)
-    except Exception as e:
-        return web.json_response({"error": f"ask_paper failed: {e}"}, status=500)
-
-    return web.json_response({"arxiv_id": arxiv_id, "question": question, "answer": answer})
+        return web.json_response({"responses": {arxiv_ids[0]: result}})
+    return web.json_response({"responses": result})
 
 
 async def handle_health(request: web.Request) -> web.Response:
@@ -367,8 +347,7 @@ app.router.add_post("/references", handle_references)
 app.router.add_post("/get_paper", handle_get_paper)
 app.router.add_post("/download_source", handle_download_source)
 app.router.add_post("/read_file", handle_read_file)
-app.router.add_post("/summarize_paper", handle_summarize_paper)
-app.router.add_post("/ask_paper", handle_ask_paper)
+app.router.add_post("/query_paper", handle_query_paper)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
