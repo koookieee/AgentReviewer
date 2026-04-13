@@ -32,8 +32,18 @@ echo "Script dir: $SCRIPT_DIR"
 : "${E2B_API_KEY:?Set E2B_API_KEY}"
 : "${GEMINI_API_KEY:?Set GEMINI_API_KEY (for LLM judge reward)}"
 
+# ── Sampler backend ──
+# "tinker" (default) uses Tinker GPU for sampling.
+# "deepinfra" uses DeepInfra API (cheaper, returns logprobs on tool calls).
+SAMPLER_BACKEND="${SAMPLER_BACKEND:-tinker}"
+DEEPINFRA_MODEL="${DEEPINFRA_MODEL:-Qwen/Qwen3.5-35B-A3B}"
+if [ "$SAMPLER_BACKEND" = "deepinfra" ]; then
+    : "${DEEPINFRA_API_KEY:?Set DEEPINFRA_API_KEY when using deepinfra backend}"
+    export DEEPINFRA_API_KEY
+fi
+
 # ── Config ──
-MODEL="${MODEL:-nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16:peft:262144}"
+MODEL="${MODEL:-Qwen/Qwen3.5-35B-A3B}"
 LORA_RANK="${LORA_RANK:-32}"
 LEARNING_RATE="${LEARNING_RATE:-1e-6}"
 MAX_STEPS="${MAX_STEPS:-200}"
@@ -86,6 +96,10 @@ echo "Found $TASK_COUNT paper review tasks in $DATA_DIR"
 echo ""
 echo "=== Starting training ==="
 echo "  Model: $MODEL"
+echo "  Sampler backend: $SAMPLER_BACKEND"
+if [ "$SAMPLER_BACKEND" = "deepinfra" ]; then
+    echo "  DeepInfra model: $DEEPINFRA_MODEL"
+fi
 echo "  LoRA rank: $LORA_RANK"
 echo "  Learning rate: $LEARNING_RATE"
 echo "  Max steps: $MAX_STEPS"
@@ -97,6 +111,8 @@ echo ""
 
 exec python "$SCRIPT_DIR/train.py" \
     --model_name "$MODEL" \
+    --sampler_backend "$SAMPLER_BACKEND" \
+    --deepinfra_model "$DEEPINFRA_MODEL" \
     --lora_rank "$LORA_RANK" \
     --learning_rate "$LEARNING_RATE" \
     --max_steps "$MAX_STEPS" \

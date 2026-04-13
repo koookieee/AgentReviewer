@@ -108,6 +108,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
+import httpx
 import tinker
 import uvicorn
 from fastapi import FastAPI, Request
@@ -117,7 +118,7 @@ from tinker_cookbook.renderers import Renderer, get_renderer, format_content_as_
 from tinker_cookbook.renderers.base import ToolCall
 from tinker_cookbook.model_info import get_recommended_renderer_name
 from tinker_cookbook.third_party.openai_compat import openai_messages_to_tinker, openai_tools_to_tinker
-from tinker_cookbook.third_party.litellm.provider import _prepare_messages_with_tools
+from tinker_cookbook.third_party.litellm.provider import _prepare_messages_with_tools, _SamplingResult
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,186 @@ class SessionData:
     interactions: list[SessionInteraction] = field(default_factory=list)
     reward: float | None = None
     created_at: float = field(default_factory=time.time)
+
+
+# ── DeepInfra sampler ──────────────────────────────────────────────────
+
+
+DEEPINFRA_API_URL = "https://api.deepinfra.com/v1/openai/chat/completions"
+
+
+async def _deepinfra_sample_chat_completion(
+    renderer: Renderer,
+    tokenizer,
+    messages: list[dict[str, Any]],
+    *,
+    temperature: float = 1.0,
+    max_tokens: int = 128,
+    top_p: float = 1.0,
+    tools: list[dict[str, Any]] | None = None,
+    model_name: str = "tinker",
+    deepinfra_model: str = "Qwen/Qwen3.5-35B-A3B",
+    deepinfra_api_key: str = "",
+) -> _SamplingResult:
+    """Sample via DeepInfra API instead of Tinker SamplingClient.
+
+    DeepInfra returns logprobs on both text AND tool call responses,
+    so we can use native tool calling (pass tools param directly).
+
+    Steps:
+    1. Build tokenized prompt via renderer (for prompt_token_ids used by training)
+    2. Call DeepInfra chat completions with messages + tools + logprobs
+    3. Re-tokenize output text using Tinker's tokenizer for training-compatible token_ids
+    4. Align DeepInfra's per-token logprobs to Tinker's tokenization
+    5. Parse tool calls from the response
+
+    Returns _SamplingResult with the same interface as _sample_chat_completion.
+    """
+    # Step 1: Build tokenized prompt for training datum construction.
+    # The renderer tokenizes the conversation in the model's native format,
+    # giving us prompt_token_ids that Tinker's forward_backward uses.
+    tinker_msgs = openai_messages_to_tinker(messages)
+    if tools:
+        tinker_msgs = _prepare_messages_with_tools(renderer, tinker_msgs, tools)
+    model_input = renderer.build_generation_prompt(tinker_msgs)
+    prompt_token_ids: list[int] = model_input.to_ints()
+
+    # Step 2: Call DeepInfra with native tool calling + logprobs.
+    payload: dict[str, Any] = {
+        "model": deepinfra_model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_p": top_p,
+        "logprobs": True,
+        "top_logprobs": 1,
+    }
+    if tools:
+        payload["tools"] = tools
+
+    headers = {
+        "Authorization": f"Bearer {deepinfra_api_key}",
+        "Content-Type": "application/json",
+    }
+
+    async with httpx.AsyncClient(timeout=300) as client:
+        resp = await client.post(DEEPINFRA_API_URL, json=payload, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+
+    if "error" in data:
+        raise RuntimeError(f"DeepInfra error: {data['error']}")
+
+    choice = data["choices"][0]
+    msg = choice["message"]
+    raw_text = msg.get("content", "") or ""
+    tool_calls = msg.get("tool_calls", [])
+    finish_reason = choice.get("finish_reason", "stop")
+
+    # Step 3: Reconstruct the full output text the model generated.
+    # DeepInfra returns tool calls as structured objects, but the model
+    # actually generated them as text tokens (with logprobs). We reconstruct
+    # the full text so we can re-tokenize it with Tinker's tokenizer.
+    #
+    # For tool calls, the model generated something like:
+    #   <tool_call>{"name":"bash","arguments":{"command":"ls"}}</tool_call>
+    # DeepInfra parsed this into the tool_calls field. We reconstruct it
+    # so the token IDs match what the training model expects.
+    full_output_text = raw_text
+    if tool_calls:
+        for tc in tool_calls:
+            fn = tc.get("function", {})
+            tc_text = json.dumps({"name": fn.get("name", ""), "arguments": fn.get("arguments", "")})
+            full_output_text += f"\n<tool_call>\n{tc_text}\n</tool_call>"
+
+    completion_token_ids: list[int] = tokenizer.encode(
+        full_output_text, add_special_tokens=False,
+    ) if full_output_text else []
+
+    # Step 4: Extract and align logprobs.
+    # DeepInfra uses the same Qwen tokenizer, so logprobs should align 1:1
+    # with our re-tokenized output. But we use character-level alignment
+    # as a safety net in case of minor tokenization differences.
+    lp_data = choice.get("logprobs", {})
+    lp_tokens = lp_data.get("content", []) if lp_data else []
+
+    if lp_tokens and completion_token_ids:
+        logprobs = _align_logprobs(lp_tokens, full_output_text, completion_token_ids, tokenizer)
+    elif lp_tokens:
+        logprobs = [t["logprob"] for t in lp_tokens]
+    else:
+        logger.warning("DeepInfra returned no logprobs")
+        logprobs = [0.0] * len(completion_token_ids)
+
+    # Step 5: Build parsed_message for the Anthropic response.
+    # We construct it directly from DeepInfra's structured response
+    # instead of using renderer.parse_response(), since DeepInfra already
+    # parsed tool calls for us.
+    parsed_tool_calls = []
+    if tool_calls:
+        for tc in tool_calls:
+            fn = tc.get("function", {})
+            parsed_tool_calls.append(ToolCall(
+                id=tc.get("id", f"call_{uuid.uuid4().hex[:12]}"),
+                function=ToolCall.FunctionBody(
+                    name=fn.get("name", ""),
+                    arguments=fn.get("arguments", "{}"),
+                ),
+            ))
+
+    parsed_message = {"role": "assistant", "content": raw_text}
+    if parsed_tool_calls:
+        parsed_message["tool_calls"] = parsed_tool_calls
+
+    parse_success = finish_reason in ("stop", "tool_calls")
+
+    return _SamplingResult(
+        prompt_token_ids=prompt_token_ids,
+        completion_token_ids=completion_token_ids,
+        logprobs=logprobs,
+        parsed_message=parsed_message,
+        parse_success=parse_success,
+        model_name=model_name,
+    )
+
+
+def _align_logprobs(
+    api_tokens: list[dict],
+    full_text: str,
+    completion_token_ids: list[int],
+    tokenizer,
+) -> list[float]:
+    """Align API per-token logprobs to Tinker tokenizer token IDs.
+
+    Both tokenizers produce tokens that cover the same output text but may
+    split it differently. We build a character-level logprob array from the
+    API tokens, then aggregate per Tinker token.
+    """
+    # Build character-level logprob array from API tokens
+    char_logprobs: list[float] = []
+    for tok_info in api_tokens:
+        tok_text = tok_info.get("token", "")
+        tok_lp = tok_info.get("logprob", 0.0)
+        for _ in tok_text:
+            char_logprobs.append(tok_lp)
+
+    # Map each Tinker token to its character span and sum logprobs
+    aligned: list[float] = []
+    char_offset = 0
+    for tid in completion_token_ids:
+        tok_text = tokenizer.decode([tid])
+        tok_len = len(tok_text)
+        if tok_len == 0:
+            aligned.append(0.0)
+            continue
+        end = min(char_offset + tok_len, len(char_logprobs))
+        if char_offset < end:
+            aligned.append(sum(char_logprobs[char_offset:end]))
+        else:
+            aligned.append(0.0)
+        char_offset = end
+
+    return aligned
 
 
 # ── Anthropic ↔ OpenAI translation ───────────────────────────────────────
@@ -230,11 +411,113 @@ def _openai_response_to_anthropic(
     }
 
 
+# ── Sampler dispatch helpers ────────────────────────────────────────────
+
+
+async def _sample_tinker(
+    proxy,
+    messages: list[dict],
+    tools: list[dict] | None,
+    temperature: float,
+    top_p: float,
+    max_tokens: int,
+    max_tokens_requested: int,
+    est_prompt_len: int,
+) -> _SamplingResult | JSONResponse:
+    """Sample using Tinker SamplingClient (original path)."""
+    from tinker_cookbook.third_party.litellm.provider import _sample_chat_completion
+
+    try:
+        return await _sample_chat_completion(
+            sampling_client=proxy._client,
+            renderer=proxy._renderer,
+            messages=messages,
+            tools=tools,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            model_name=proxy._model_name,
+        )
+    except Exception as e:
+        err_str = str(e)
+        # Auto-detect context window from Tinker's error message
+        if "context window" in err_str and proxy._max_ctx == 0:
+            import re as _re
+            m = _re.search(r'> (\d+)', err_str)
+            if m:
+                proxy._max_ctx = int(m.group(1))
+                logger.info(f"Auto-detected context window: {proxy._max_ctx}")
+                max_tokens = min(max_tokens_requested,
+                                 proxy._max_ctx - est_prompt_len - 64)
+                max_tokens = max(max_tokens, 1)
+                try:
+                    return await _sample_chat_completion(
+                        sampling_client=proxy._client,
+                        renderer=proxy._renderer,
+                        messages=messages,
+                        tools=tools,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        top_p=top_p,
+                        model_name=proxy._model_name,
+                    )
+                except Exception as e2:
+                    logger.error(f"Sampling retry failed: {e2}")
+                    return JSONResponse(
+                        {"type": "error", "error": {"type": "api_error", "message": str(e2)}},
+                        status_code=500,
+                    )
+        logger.error(f"Sampling error: {e}")
+        return JSONResponse(
+            {"type": "error", "error": {"type": "api_error", "message": err_str}},
+            status_code=500,
+        )
+
+
+async def _sample_deepinfra(
+    proxy,
+    messages: list[dict],
+    tools: list[dict] | None,
+    temperature: float,
+    top_p: float,
+    max_tokens: int,
+    max_tokens_requested: int,
+    est_prompt_len: int,
+) -> _SamplingResult | JSONResponse:
+    """Sample using DeepInfra API with logprobs."""
+    try:
+        return await _deepinfra_sample_chat_completion(
+            renderer=proxy._renderer,
+            tokenizer=proxy._tokenizer,
+            messages=messages,
+            tools=tools,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            model_name=proxy._model_name,
+            deepinfra_model=proxy._deepinfra_model,
+            deepinfra_api_key=proxy._deepinfra_api_key,
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"DeepInfra HTTP error: {e.response.status_code} {e.response.text[:500]}")
+        return JSONResponse(
+            {"type": "error", "error": {"type": "api_error", "message": f"DeepInfra: {e.response.status_code}"}},
+            status_code=500,
+        )
+    except Exception as e:
+        import traceback
+        logger.error(f"DeepInfra sampling error: {e}\n{traceback.format_exc()}")
+        return JSONResponse(
+            {"type": "error", "error": {"type": "api_error", "message": str(e)}},
+            status_code=500,
+        )
+
+
 # ── Proxy ────────────────────────────────────────────────────────────────
 
 
 class AnthropicTinkerProxy:
-    """Anthropic Messages API proxy backed by Tinker SamplingClient.
+    """Anthropic Messages API proxy backed by Tinker SamplingClient or DeepInfra.
 
     Uses tinker-cookbook's renderer for:
     - Tool schema injection (model-specific format)
@@ -242,6 +525,10 @@ class AnthropicTinkerProxy:
     - Tool call parsing from raw model output
 
     Captures per-session (messages, token_ids, logprobs) for RL training.
+
+    Supports two sampler backends:
+    - "tinker": Tinker SamplingClient (default, uses GPU)
+    - "deepinfra": DeepInfra API (cheaper, pay-per-token, returns logprobs on tool calls)
     """
 
     def __init__(
@@ -249,9 +536,18 @@ class AnthropicTinkerProxy:
         sampling_client: tinker.SamplingClient,
         model_name: str = "default",
         base_model: str | None = None,
+        sampler_backend: str = "tinker",
+        deepinfra_model: str = "Qwen/Qwen3.5-35B-A3B",
+        deepinfra_api_key: str = "",
+        deepinfra_max_ctx: int = 262144,
     ):
         self._client = sampling_client
         self._model_name = model_name
+        self._sampler_backend = sampler_backend
+
+        # DeepInfra config
+        self._deepinfra_model = deepinfra_model
+        self._deepinfra_api_key = deepinfra_api_key
 
         # Resolve base model for renderer
         self._base_model = base_model or sampling_client.get_base_model()
@@ -261,7 +557,10 @@ class AnthropicTinkerProxy:
 
         # Context window limit. Auto-detected from Tinker's error response
         # on first overflow, or set explicitly via max_ctx parameter.
-        self._max_ctx = 0  # 0 = not yet detected
+        if sampler_backend == "deepinfra":
+            self._max_ctx = deepinfra_max_ctx
+        else:
+            self._max_ctx = 0  # 0 = not yet detected
 
         self._sessions: dict[str, SessionData] = {}
         self._lock = threading.Lock()
@@ -269,8 +568,20 @@ class AnthropicTinkerProxy:
         self._server: uvicorn.Server | None = None
         self._thread: threading.Thread | None = None
 
+        if sampler_backend == "deepinfra":
+            logger.info(
+                f"Using DeepInfra sampler: model={deepinfra_model} "
+                f"max_ctx={deepinfra_max_ctx}"
+            )
+        else:
+            logger.info("Using Tinker SamplingClient sampler")
+
     def update_client(self, new_client: tinker.SamplingClient) -> None:
-        """Hot-swap SamplingClient after weight sync."""
+        """Hot-swap SamplingClient after weight sync.
+
+        Only relevant for tinker backend. For deepinfra, this is a no-op
+        for the sampler but we still update the tokenizer for datum construction.
+        """
         self._client = new_client
         self._tokenizer = new_client.get_tokenizer()
 
@@ -317,10 +628,17 @@ class AnthropicTinkerProxy:
             if auth.lower().startswith("bearer "):
                 api_key = auth[7:].strip()
         if not api_key:
+            logger.debug("No API key found in request headers")
             return None
         with self._lock:
             if api_key in self._sessions:
                 return api_key
+            else:
+                registered = list(self._sessions.keys())
+                logger.warning(
+                    f"API key from request not in sessions. "
+                    f"received='{api_key[:16]}...' registered={[k[:16]+'...' for k in registered]}"
+                )
         return None
 
     def _build_app(self) -> FastAPI:
@@ -363,19 +681,8 @@ class AnthropicTinkerProxy:
             messages = openai_req.get("messages", [])
             tools = openai_req.get("tools", None)
 
-            # Use tinker-cookbook's renderer pipeline:
-            # - Converts OpenAI messages to tinker format
-            # - Injects tool schemas in model-specific format
-            # - Tokenizes via renderer.build_generation_prompt
-            # - Samples via SamplingClient
-            # - Parses tool calls from output
-            from tinker_cookbook.third_party.litellm.provider import _sample_chat_completion
-
             # Cap max_tokens so prompt + max_tokens <= model context window.
             # Claude Code often requests max_tokens=32000+ which overflows.
-            # We estimate prompt length, then cap max_tokens dynamically.
-            # The context limit comes from Tinker's model config (detected
-            # at first error or from _max_ctx set by the user).
             try:
                 tinker_msgs = openai_messages_to_tinker(messages)
                 if tools:
@@ -389,8 +696,6 @@ class AnthropicTinkerProxy:
             if est_prompt_len > 0 and proxy._max_ctx > 0:
                 remaining = proxy._max_ctx - est_prompt_len - 64
                 if remaining <= 0:
-                    # Prompt alone exceeds context window — can't generate anything.
-                    # Return Anthropic error so Claude Code knows to stop.
                     logger.warning(
                         f"Prompt ({est_prompt_len} tokens) exceeds context window "
                         f"({proxy._max_ctx}). Returning context_length error."
@@ -409,60 +714,20 @@ class AnthropicTinkerProxy:
             temperature = body.get("temperature", 1.0)
             top_p = body.get("top_p", 1.0)
 
-            try:
-                result = await _sample_chat_completion(
-                    sampling_client=proxy._client,
-                    renderer=proxy._renderer,
-                    messages=messages,
-                    tools=tools,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    top_p=top_p,
-                    model_name=proxy._model_name,
+            # ── Dispatch to sampler backend ──
+            if proxy._sampler_backend == "deepinfra":
+                result = await _sample_deepinfra(
+                    proxy, messages, tools, temperature, top_p,
+                    max_tokens, max_tokens_requested, est_prompt_len,
                 )
-            except Exception as e:
-                err_str = str(e)
-                # Auto-detect context window from Tinker's error message:
-                # "prompt + max_tokens > N" where N is the actual limit
-                if "context window" in err_str and proxy._max_ctx == 0:
-                    import re as _re
-                    m = _re.search(r'> (\d+)', err_str)
-                    if m:
-                        proxy._max_ctx = int(m.group(1))
-                        logger.info(f"Auto-detected context window: {proxy._max_ctx}")
-                        # Retry with capped max_tokens
-                        max_tokens = min(max_tokens_requested,
-                                         proxy._max_ctx - est_prompt_len - 64)
-                        max_tokens = max(max_tokens, 1)
-                        try:
-                            result = await _sample_chat_completion(
-                                sampling_client=proxy._client,
-                                renderer=proxy._renderer,
-                                messages=messages,
-                                tools=tools,
-                                temperature=temperature,
-                                max_tokens=max_tokens,
-                                top_p=top_p,
-                                model_name=proxy._model_name,
-                            )
-                        except Exception as e2:
-                            logger.error(f"Sampling retry failed: {e2}")
-                            return JSONResponse(
-                                {"type": "error", "error": {"type": "api_error", "message": str(e2)}},
-                                status_code=500,
-                            )
-                    else:
-                        logger.error(f"Sampling error: {e}")
-                        return JSONResponse(
-                            {"type": "error", "error": {"type": "api_error", "message": err_str}},
-                            status_code=500,
-                        )
-                else:
-                    logger.error(f"Sampling error: {e}")
-                    return JSONResponse(
-                        {"type": "error", "error": {"type": "api_error", "message": err_str}},
-                        status_code=500,
-                    )
+            else:
+                result = await _sample_tinker(
+                    proxy, messages, tools, temperature, top_p,
+                    max_tokens, max_tokens_requested, est_prompt_len,
+                )
+
+            if isinstance(result, JSONResponse):
+                return result
 
             # Extract results
             prompt_token_ids = result.prompt_token_ids
@@ -470,7 +735,7 @@ class AnthropicTinkerProxy:
             output_logprobs = list(result.logprobs) if result.logprobs else []
 
             if not output_logprobs:
-                logger.error("Tinker returned NO logprobs — this will break importance sampling loss.")
+                logger.error("Sampler returned NO logprobs — this will break importance sampling loss.")
 
             # Build the Anthropic response from the RAW decoded text.
             # Critical: we decode the raw tokens ourselves instead of using

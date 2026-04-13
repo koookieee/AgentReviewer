@@ -44,7 +44,7 @@ Prerequisites
 Usage
 =====
     python train.py
-    python train.py --model_name Qwen/Qwen3-32B --max_steps 100
+    python train.py --model_name Qwen/Qwen3.5-35B-A3B --max_steps 100
 """
 
 from __future__ import annotations
@@ -96,7 +96,7 @@ DEFAULT_DATA_DIR = _repo_data if (_repo_data and _repo_data.is_dir()) else Path(
 
 @dataclass
 class Config:
-    model_name: str = "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16:peft:262144"
+    model_name: str = "Qwen/Qwen3.5-35B-A3B"
     lora_rank: int = 32
     learning_rate: float = 1e-6
     max_steps: int = 200
@@ -117,7 +117,13 @@ class Config:
     environment_type: str = "e2b"
 
     # Proxy
-    proxy_port: int = 8321
+    proxy_port: int = 8082
+
+    # Sampler backend: "tinker" (default, GPU) or "deepinfra" (cheap API with logprobs)
+    sampler_backend: str = "tinker"
+    deepinfra_model: str = "Qwen/Qwen3.5-35B-A3B"
+    deepinfra_api_key: str = ""
+    deepinfra_max_ctx: int = 262144  # context window (prompt + completion combined)
 
     # Data
     data_dir: str = str(DEFAULT_DATA_DIR)
@@ -260,9 +266,11 @@ async def run_single_trial(
             config["task"] = {"path": str(task.path)}
 
             # Set ANTHROPIC_API_KEY to session_id so proxy can route.
-            # AgentConfig has no "env" field (dropped by Pydantic), so
-            # the claude-code agent reads ANTHROPIC_API_KEY from os.environ.
+            # Harbor's claude_code agent passes env vars from both os.environ
+            # AND the config's agent.env dict (which overrides os.environ).
+            # We must set it in BOTH places for the sandbox to receive it.
             config["agent"]["kwargs"]["session_id"] = session_id
+            config["agent"]["env"]["ANTHROPIC_API_KEY"] = session_id
             os.environ["ANTHROPIC_API_KEY"] = session_id
 
             trial_config = TrialConfig.model_validate(config)
@@ -427,10 +435,20 @@ async def run(cfg: Config) -> None:
     tokenizer = sc.get_tokenizer()
 
     # ── Start Anthropic proxy ──
+    deepinfra_api_key = cfg.deepinfra_api_key or os.environ.get("DEEPINFRA_API_KEY", "")
+    if cfg.sampler_backend == "deepinfra" and not deepinfra_api_key:
+        logger.error("sampler_backend=deepinfra but no API key provided. "
+                      "Set --deepinfra_api_key or DEEPINFRA_API_KEY env var.")
+        sys.exit(1)
+
     proxy = AnthropicTinkerProxy(
         sc,
         model_name=cfg.model_name.split("/")[-1],
         base_model=cfg.model_name,
+        sampler_backend=cfg.sampler_backend,
+        deepinfra_model=cfg.deepinfra_model,
+        deepinfra_api_key=deepinfra_api_key,
+        deepinfra_max_ctx=cfg.deepinfra_max_ctx,
     )
     proxy.start(host="0.0.0.0", port=cfg.proxy_port)
 
